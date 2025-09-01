@@ -49,6 +49,9 @@ public:
     static Enemy createGoblin();
     static Enemy createSkeleton();
     static Enemy createOrc();
+    static Enemy createTroll();       // ID 4
+    static Enemy createDragon();      // ID 5
+    static Enemy createBandit();      // ID 6
     static Enemy createRandomEnemy();
     
     virtual ~Enemy();

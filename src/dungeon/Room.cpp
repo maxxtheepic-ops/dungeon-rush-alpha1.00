@@ -38,6 +38,12 @@ Enemy Room::createEnemy() const {
             return Enemy::createSkeleton();
         case 3:
             return Enemy::createOrc();
+        case 4: 
+            return Enemy::createTroll();
+        case 5: 
+            return Enemy::createDragon();
+        case 6: 
+            return Enemy::createBandit();
         default:
             return Enemy::createGoblin();
     }

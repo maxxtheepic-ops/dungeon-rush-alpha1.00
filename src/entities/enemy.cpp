@@ -137,6 +137,30 @@ Enemy Enemy::createOrc() {
     return orc;
 }
 
+Enemy Enemy::createTroll() {
+    Enemy troll("Cave Troll", TROLL_HP, TROLL_ATK, TROLL_SPD, AI_BERSERKER);
+    troll.defense = TROLL_DEF;
+    troll.setSpriteFile("enemies/troll.bmp");
+    troll.setExperienceValue(75);
+    return troll;
+}
+
+Enemy Enemy::createDragon() {
+    Enemy dragon("Young Dragon", DRAGON_HP, DRAGON_ATK, DRAGON_SPD, AI_BALANCED);
+    dragon.defense = DRAGON_DEF;
+    dragon.setSpriteFile("enemies/dragon.bmp");
+    dragon.setExperienceValue(100);
+    return dragon;
+}
+
+Enemy Enemy::createBandit() {
+    Enemy bandit("Bandit", 35, 12, 8, AI_AGGRESSIVE);
+    bandit.defense = 5;
+    bandit.setSpriteFile("enemies/bandit.bmp");
+    bandit.setExperienceValue(20);
+    return bandit;
+}
+
 Enemy Enemy::createRandomEnemy() {
     int enemyType = random(1, 4); // Random 1-3
     

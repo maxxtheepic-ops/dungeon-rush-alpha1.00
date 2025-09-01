@@ -118,6 +118,24 @@
 #define ORC_DEF             8
 #define ORC_SPD             6
 
+// New enemy stats - Troll
+#define TROLL_HP            100
+#define TROLL_ATK           20  
+#define TROLL_DEF           12
+#define TROLL_SPD           4
+
+// New enemy stats - Dragon
+#define DRAGON_HP           150
+#define DRAGON_ATK          30
+#define DRAGON_DEF          18
+#define DRAGON_SPD          6 
+
+// New enemy stats - Bandit
+#define BANDIT_HP           35
+#define BANDIT_ATK          12
+#define BANDIT_DEF          5
+#define BANDIT_SPD          10
+
 // Combat constants
 #define MAX_COMBAT_TURNS    20
 #define DEFEND_BONUS_MULTIPLIER 1.5

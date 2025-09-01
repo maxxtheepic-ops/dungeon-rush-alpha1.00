@@ -24,6 +24,10 @@ private:
     // Room generation
     void generateRandomRoom(int roomID);
     RoomType selectRandomRoomType();
+    RoomType selectRoomTypeForPosition(int roomPosition); // NEW: Position-based room selection
+    
+    // Enemy selection with floor-based scaling
+    int selectFloorScaledEnemy();
     
 public:
     // Constructor

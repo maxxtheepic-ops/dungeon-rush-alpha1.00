@@ -32,8 +32,28 @@ void CombatRoomState::handleRoomInteraction() {
             
             // Now process the result
             if (combatManager->getCombatResult() == RESULT_VICTORY) {
-                completeRoom(); // This will trigger return to door choice
+                // Check if this was a boss room
+                if (currentRoom && currentRoom->getType() == ROOM_BOSS) {
+                    Serial.println("=== BOSS DEFEATED ===");
+                    Serial.println("Advancing to next floor!");
+                    Serial.println("Current floor: " + String(dungeonManager->getCurrentFloorNumber()));
+                    
+                    // Advance to next floor instead of just completing room
+                    dungeonManager->advanceToNextFloor();
+                    
+                    Serial.println("Advanced to floor: " + String(dungeonManager->getCurrentFloorNumber()));
+                    Serial.println("===================");
+                    
+                    // Return to door choice with new floor
+                    requestStateChange(StateTransition::DOOR_CHOICE);
+                } else {
+                    // Regular room - normal completion
+                    Serial.println("Regular enemy defeated - completing room");
+                    completeRoom(); // This will trigger return to door choice
+                }
             } else {
+                // Player was defeated - game over
+                Serial.println("Player defeated - game over");
                 requestStateChange(StateTransition::GAME_OVER);
             }
         }
@@ -100,15 +120,20 @@ void CombatRoomState::handleCombatInput() {
         
         // Check if combat is over
         if (combatResult == RESULT_VICTORY) {
-            combatHUD->drawVictoryScreen();
-            combatActive = false;
-            combatMenu->deactivate();
-            showingResultScreen = true;  // Wait for player input
-            
-            // Check if this was a boss room
+                combatHUD->drawVictoryScreen();
+                combatActive = false;
+             combatMenu->deactivate();
+             showingResultScreen = true;
+    
+                // NEW: Check if this was a boss room - if so, advance floor immediately
             if (currentRoom && currentRoom->getType() == ROOM_BOSS) {
-                Serial.println("Boss defeated! Floor complete!");
-            }
+                Serial.println("Boss defeated! Advancing to next floor!");
+                // Don't call completeRoom() for boss - handle specially
+             } else {
+            // Regular room completion
+             Serial.println("Regular enemy defeated!");
+                }
+
             
             // Don't call completeRoom() yet - wait for player input
         } else if (combatResult == RESULT_DEFEAT) {
