@@ -40,28 +40,42 @@ void LibraryRoomState::enter() {
     selectedOption = 0;
     screenDrawn = false;
     lastSelectedOption = -1;
+    // ADDED: Force immediate draw when entering
+    drawMainMenu();
 }
 
 void LibraryRoomState::update() {
     switch (currentScreen) {
         case SCREEN_MAIN_MENU:
             handleMainMenuInput();
-            if (!screenDrawn) drawMainMenu();
+            // Only redraw main menu if we're actually still on the main menu screen
+            if (currentScreen == SCREEN_MAIN_MENU && (!screenDrawn || selectedOption != lastSelectedOption)) {
+                drawMainMenu();
+            }
             break;
             
         case SCREEN_SCROLL_SELECTION:
             handleScrollSelectionInput();
-            if (!screenDrawn) drawScrollSelection();
+            // Only draw if we're still on this screen
+            if (currentScreen == SCREEN_SCROLL_SELECTION && !screenDrawn) {
+                drawScrollSelection();
+            }
             break;
             
         case SCREEN_SPELL_MANAGEMENT:
             handleSpellManagementInput();
-            if (!screenDrawn) drawSpellManagement();
+            // Only draw if we're still on this screen
+            if (currentScreen == SCREEN_SPELL_MANAGEMENT && !screenDrawn) {
+                drawSpellManagement();
+            }
             break;
             
         case SCREEN_SPELL_REPLACEMENT:
             handleSpellReplacementInput();
-            if (!screenDrawn) drawSpellReplacement();
+            // Only draw if we're still on this screen
+            if (currentScreen == SCREEN_SPELL_REPLACEMENT && !screenDrawn) {
+                drawSpellReplacement();
+            }
             break;
             
         case SCREEN_REST_RESULT:
@@ -79,13 +93,15 @@ void LibraryRoomState::handleMainMenuInput() {
     if (input->wasPressed(Button::UP)) {
         selectedOption--;
         if (selectedOption < 0) selectedOption = maxOptions - 1;
-        screenDrawn = false;
+        // CHANGED: Force immediate redraw
+        drawMainMenu();
     }
     
     if (input->wasPressed(Button::DOWN)) {
         selectedOption++;
         if (selectedOption >= maxOptions) selectedOption = 0;
-        screenDrawn = false;
+        // CHANGED: Force immediate redraw
+        drawMainMenu();
     }
     
     // Selection with A button only
@@ -130,13 +146,15 @@ void LibraryRoomState::handleScrollSelectionInput() {
     if (input->wasPressed(Button::UP)) {
         selectedScrollIndex--;
         if (selectedScrollIndex < 0) selectedScrollIndex = availableScrolls.size() - 1;
-        screenDrawn = false;
+        // CHANGED: Force immediate redraw
+        drawScrollSelection();
     }
     
     if (input->wasPressed(Button::DOWN)) {
         selectedScrollIndex++;
         if (selectedScrollIndex >= availableScrolls.size()) selectedScrollIndex = 0;
-        screenDrawn = false;
+        // CHANGED: Force immediate redraw
+        drawScrollSelection();
     }
     
     // Selection - read the selected scroll
@@ -155,13 +173,15 @@ void LibraryRoomState::handleSpellManagementInput() {
     if (input->wasPressed(Button::UP)) {
         selectedOption--;
         if (selectedOption < 0) selectedOption = 3;
-        screenDrawn = false;
+        // CHANGED: Force immediate redraw
+        drawSpellManagement();
     }
     
     if (input->wasPressed(Button::DOWN)) {
         selectedOption++;
         if (selectedOption > 3) selectedOption = 0;
-        screenDrawn = false;
+        // CHANGED: Force immediate redraw
+        drawSpellManagement();
     }
     
     // Selection - manage the selected spell slot
@@ -170,7 +190,8 @@ void LibraryRoomState::handleSpellManagementInput() {
         if (player->getSpellLibrary()->getKnownSpellCount() > 0) {
             currentScreen = SCREEN_SPELL_REPLACEMENT;
             selectedOption = 0;
-            screenDrawn = false;
+            // CHANGED: Force immediate draw of new screen
+            drawSpellReplacement();
         }
     }
     
@@ -187,13 +208,15 @@ void LibraryRoomState::handleSpellReplacementInput() {
     if (input->wasPressed(Button::UP)) {
         selectedOption--;
         if (selectedOption < 0) selectedOption = knownSpells.size() - 1;
-        screenDrawn = false;
+        // CHANGED: Force immediate redraw
+        drawSpellReplacement();
     }
     
     if (input->wasPressed(Button::DOWN)) {
         selectedOption++;
         if (selectedOption >= knownSpells.size()) selectedOption = 0;
-        screenDrawn = false;
+        // CHANGED: Force immediate redraw
+        drawSpellReplacement();
     }
     
     // Selection
@@ -205,7 +228,8 @@ void LibraryRoomState::handleSpellReplacementInput() {
         Serial.println("DEBUG: B pressed in spell replacement - returning to spell management");
         currentScreen = SCREEN_SPELL_MANAGEMENT;
         selectedOption = selectedSpellSlot;
-        screenDrawn = false;
+        // CHANGED: Force immediate draw of spell management screen
+        drawSpellManagement();
     }
 }
 
@@ -280,7 +304,7 @@ void LibraryRoomState::returnToMainMenu() {
     // Small delay to prevent input carry-over
     delay(100);
     
-    // ADDED: Force immediate redraw of main menu
+    // CHANGED: Force immediate redraw of main menu
     drawMainMenu();
     
     Serial.println("DEBUG: Returned to library main menu");
@@ -314,7 +338,6 @@ void LibraryRoomState::completeRoom() {
     requestStateChange(StateTransition::DOOR_CHOICE);
 }
 
-// Rest of the methods remain the same as before...
 void LibraryRoomState::performRest() {
     if (player->getGold() < REST_COST) {
         drawRestResult(false, "Need 20 gold to rest");
@@ -345,12 +368,16 @@ void LibraryRoomState::openScrolls() {
     currentScreen = SCREEN_SCROLL_SELECTION;
     selectedScrollIndex = 0;
     screenDrawn = false;
+    // CHANGED: Force immediate draw of scroll selection screen
+    drawScrollSelection();
 }
 
 void LibraryRoomState::openSpellManagement() {
     currentScreen = SCREEN_SPELL_MANAGEMENT;
     selectedOption = 0;
     screenDrawn = false;
+    // CHANGED: Force immediate draw of spell management screen
+    drawSpellManagement();
 }
 
 void LibraryRoomState::equipSpellToSlot() {
@@ -383,6 +410,8 @@ void LibraryRoomState::equipSpellToSlot() {
     currentScreen = SCREEN_SPELL_MANAGEMENT;
     selectedOption = selectedSpellSlot;
     screenDrawn = false;
+    // CHANGED: Force immediate draw of spell management screen
+    drawSpellManagement();
 }
 
 void LibraryRoomState::showSpellLearned(Spell* spell) {
@@ -411,7 +440,7 @@ void LibraryRoomState::showSpellLearned(Spell* spell) {
     Serial.println("Player learned: " + spell->getName());
 }
 
-// All drawing methods and other methods remain the same...
+// Drawing methods remain the same...
 void LibraryRoomState::drawMainMenu() {
     display->clear();
     
@@ -625,7 +654,7 @@ void LibraryRoomState::drawSpellReplacement() {
         display->drawText("Current: Empty", 10, 55, TFT_DARKGREY);
     }
     
-    // Show available spells
+    // Show available spells - UPDATED: Cursor only
     display->drawText("Available:", 10, 95, TFT_WHITE);
     auto knownSpells = player->getSpellLibrary()->getKnownSpells();
     
@@ -633,12 +662,13 @@ void LibraryRoomState::drawSpellReplacement() {
         int yPos = 110 + (i * 20);
         bool selected = (i == selectedOption);
         
+        Spell* spell = knownSpells[i];
+        
         if (selected) {
-            display->fillRect(5, yPos - 3, 160, 18, TFT_BLUE);
+            display->drawText(">", 10, yPos, TFT_YELLOW);
         }
         
-        Spell* spell = knownSpells[i];
-        display->drawText((">" + spell->getName()).c_str(), 10, yPos, TFT_WHITE);
+        display->drawText(spell->getName().c_str(), 25, yPos, TFT_WHITE);
         display->drawText(spell->getElementName().c_str(), 100, yPos, spell->getElementColor());
     }
     
