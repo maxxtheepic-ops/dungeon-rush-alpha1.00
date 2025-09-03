@@ -9,6 +9,7 @@ LibraryRoomState::LibraryRoomState(Display* disp, Input* inp, Player* p, Enemy* 
     player = p;
     currentEnemy = e;
     dungeonManager = dm;
+    gameStateManager = nullptr;  // Will be set by GameStateManager
     
     currentScreen = SCREEN_MAIN_MENU;
     selectedOption = 0;
@@ -98,25 +99,25 @@ void LibraryRoomState::drawMainMenu() {
     int ySpacing = 25;
     const char* options[4] = {"Rest (20g)", "Read Scrolls", "Manage Spells", "Leave"};
     
-    // Update option text based on availability
-    String scrollOption = hasScrolls() ? "Read Scrolls" : "Read Scrolls (0)";
-    
     for (int i = 0; i < maxOptions; i++) {
         int yPos = yStart + (i * ySpacing);
         String optionText = options[i];
+        uint16_t textColor = TFT_WHITE;
         
-        if (i == 1) optionText = scrollOption; // Update scroll option
+        // Update option appearance based on availability
+        if (i == 0 && player->getGold() < REST_COST) {
+            textColor = TFT_RED; // Can't afford rest
+        } else if (i == 1 && !hasScrolls()) {
+            optionText = "Read Scrolls (0)";
+            textColor = TFT_DARKGREY; // No scrolls available
+        }
         
         if (i == selectedOption) {
             display->fillRect(5, yPos - 3, 160, 20, TFT_BLUE);
             display->drawText(">", 10, yPos, TFT_YELLOW);
             display->drawText(optionText.c_str(), 25, yPos, TFT_WHITE);
         } else {
-            uint16_t color = TFT_WHITE;
-            if (i == 0 && player->getGold() < REST_COST) color = TFT_RED;
-            if (i == 1 && !hasScrolls()) color = TFT_GRAY;
-            
-            display->drawText(optionText.c_str(), 25, yPos, color);
+            display->drawText(optionText.c_str(), 25, yPos, textColor);
         }
     }
     
@@ -132,7 +133,7 @@ void LibraryRoomState::drawMainMenu() {
             display->drawText(equippedSpells[i]->getName().substring(0, 4).c_str(), x, y + 10, 
                             equippedSpells[i]->getElementColor(), 1);
         } else {
-            display->drawText((String(i + 1) + ": Empty").c_str(), x, y, TFT_GRAY, 1);
+            display->drawText((String(i + 1) + ": Empty").c_str(), x, y, TFT_DARKGREY, 1);
         }
     }
     
@@ -149,25 +150,34 @@ void LibraryRoomState::drawScrollSelection() {
     display->drawText("ANCIENT SCROLLS", 25, 15, TFT_GREEN, 2);
     
     if (availableScrolls.empty()) {
-        display->drawText("No scrolls available", 25, 100, TFT_RED);
+        display->drawText("No scrolls found", 30, 100, TFT_RED);
+        display->drawText("Explore treasure", 25, 120, TFT_YELLOW);
+        display->drawText("rooms to find", 30, 135, TFT_YELLOW);
+        display->drawText("magical scrolls!", 25, 150, TFT_YELLOW);
         display->drawText("B: Return", 50, 200, TFT_CYAN);
         screenDrawn = true;
         return;
     }
     
-    // Show scrolls
+    // Show scrolls with tier information
     for (int i = 0; i < availableScrolls.size() && i < 6; i++) {
-        int yPos = 50 + (i * 35);
+        int yPos = 50 + (i * 40);
         bool selected = (i == selectedScrollIndex);
         
         if (selected) {
-            display->fillRect(5, yPos - 3, 160, 30, TFT_BLUE);
+            display->fillRect(5, yPos - 3, 160, 35, TFT_BLUE);
         }
         
         Spell* spell = availableScrolls[i];
         display->drawText(("> " + spell->getName()).c_str(), 10, yPos, TFT_WHITE);
         display->drawText(spell->getElementName().c_str(), 10, yPos + 12, spell->getElementColor());
         display->drawText(("Power: " + String(spell->getBasePower())).c_str(), 10, yPos + 24, TFT_YELLOW);
+        
+        // Show tier information
+        String tier = "Tier 1";
+        if (spell->getBasePower() > 25) tier = "Tier 3";
+        else if (spell->getBasePower() > 20) tier = "Tier 2";
+        display->drawText(tier.c_str(), 100, yPos + 24, TFT_PURPLE);
     }
     
     // Instructions
@@ -201,7 +211,7 @@ void LibraryRoomState::drawSpellManagement() {
                             120, yPos, equippedSpells[i]->getElementColor());
         } else {
             slotText += "Empty";
-            display->drawText(slotText.c_str(), 10, yPos, TFT_GRAY);
+            display->drawText(slotText.c_str(), 10, yPos, TFT_DARKGREY);
         }
     }
     
@@ -237,7 +247,7 @@ void LibraryRoomState::drawSpellReplacement() {
         display->drawText(equippedSpells[selectedSpellSlot]->getName().c_str(), 
                          15, 70, equippedSpells[selectedSpellSlot]->getElementColor());
     } else {
-        display->drawText("Current: Empty", 10, 55, TFT_GRAY);
+        display->drawText("Current: Empty", 10, 55, TFT_DARKGREY);
     }
     
     // Show available spells
@@ -302,11 +312,9 @@ void LibraryRoomState::handleMainMenuInput() {
                 if (hasScrolls()) {
                     openScrolls();
                 } else {
-                    // Show "no scrolls" message briefly
-                    display->clear();
-                    display->drawText("No scrolls to read!", 25, 120, TFT_RED, 2);
-                    delay(1000);
-                    screenDrawn = false;
+                    // Do nothing - just ignore the input if no scrolls
+                    Serial.println("No scrolls available to read");
+                    // Don't show any message, just ignore the press
                 }
                 break;
             case 2: // Manage Spells
@@ -603,6 +611,7 @@ void LibraryRoomState::giveRandomScroll() {
 void LibraryRoomState::addAvailableScroll(Spell* spell) {
     if (spell) {
         availableScrolls.push_back(spell);
+        Serial.println("LibraryRoomState: Added scroll to available list: " + spell->getName());
     }
 }
 

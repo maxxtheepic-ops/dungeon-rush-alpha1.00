@@ -75,16 +75,15 @@ void Room::giveTreasure(Player* player) {
     setCompleted(true);
 }
 
-// Open shop for player
+// Open shop for player (now represents library access)
 void Room::openShop(Player* player) {
     if (shopVisited) {
-        Serial.println("The shopkeeper has already sold you everything!");
+        Serial.println("The library has already been visited!");
         return;
     }
     
-    // For testing, give free gear
-    player->addEquipmentBonus(0, 5, 3, 0);
-    Serial.println("Shop: You received Warrior's Gear! (+5 ATK, +3 DEF)");
+    // Library visit - this is handled by LibraryRoomState now
+    Serial.println("Library: Entering the mystical library...");
     
     shopVisited = true;
     setCompleted(true);
@@ -96,8 +95,9 @@ DoorIcon Room::getDoorIcon() const {
         case ROOM_ENEMY:
             return ICON_SWORD;
         case ROOM_TREASURE:
-        case ROOM_SHOP:
             return ICON_QUESTION;
+        case ROOM_SHOP:  // Shop rooms are now library rooms
+            return ICON_QUESTION;  // Use same icon as treasure
         case ROOM_BOSS:
             return ICON_SKULL;
         default:
@@ -105,15 +105,15 @@ DoorIcon Room::getDoorIcon() const {
     }
 }
 
-// Get room description
+// Get room description - UPDATED for library theme
 String Room::getDescription() const {
     switch(type) {
         case ROOM_ENEMY:
             return "Growling echoes within";
         case ROOM_TREASURE:
             return "Something glints inside";
-        case ROOM_SHOP:
-            return "You smell incense";
+        case ROOM_SHOP:  // Shop is now library
+            return "Ancient knowledge awaits";  // CHANGED from "You smell incense"
         case ROOM_BOSS:
             return "Ominous presence lurks";
         default:
@@ -121,15 +121,15 @@ String Room::getDescription() const {
     }
 }
 
-// Get room name
+// Get room name - UPDATED for library theme
 String Room::getRoomName() const {
     switch(type) {
         case ROOM_ENEMY:
             return "Combat Room";
         case ROOM_TREASURE:
             return "Treasure Room";
-        case ROOM_SHOP:
-            return "Shop";
+        case ROOM_SHOP:  // Shop is now library
+            return "Arcane Library";  // CHANGED from "Shop"
         case ROOM_BOSS:
             return "Boss Chamber";
         default:

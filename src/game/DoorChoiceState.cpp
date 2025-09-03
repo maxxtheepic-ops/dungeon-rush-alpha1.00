@@ -4,7 +4,7 @@
 DoorChoiceState::DoorChoiceState(Display* disp, Input* inp, DungeonManager* dm) : GameState(disp, inp) {
     dungeonManager = dm;
     selectedOption = 0;
-    maxOptions = 3;  // Left door, right door, library
+    maxOptions = 2;  // Only left door and right door
     screenDrawn = false;
     lastSelectedOption = -1;
 }
@@ -56,32 +56,23 @@ void DoorChoiceState::drawScreen() {
     // Header
     display->drawText("Choose Your Path", 30, 15, TFT_CYAN, 2);
     
-    // Layout: Two doors side by side, library below center
-    int doorWidth = 60;
-    int doorHeight = 80;
+    // Layout: Two doors side by side (no library)
+    int doorWidth = 70;
+    int doorHeight = 100;
     int doorSpacing = 20;
     int leftDoorX = (170/2) - doorWidth - (doorSpacing/2);
     int rightDoorX = (170/2) + (doorSpacing/2);
-    int doorY = 50; // Moved up slightly to make room at bottom
-    
-    // Library position (centered below doors)
-    int libraryWidth = 80;
-    int libraryHeight = 50;
-    int libraryX = (170 - libraryWidth) / 2;
-    int libraryY = doorY + doorHeight + 15; // Reduced spacing
+    int doorY = 60;
     
     // Draw doors
     drawDoor(0, leftDoorX, doorY, doorWidth, doorHeight, selectedOption == 0);
     drawDoor(1, rightDoorX, doorY, doorWidth, doorHeight, selectedOption == 1);
     
-    // Draw library
-    drawLibrary(libraryX, libraryY, libraryWidth, libraryHeight, selectedOption == 2);
-    
-    // Draw floor progress at the bottom
+    // Draw floor progress
     drawFloorProgress();
     
-    // Controls at very bottom
-    int controlY = 280; // Near bottom of screen
+    // Controls at bottom
+    int controlY = 280;
     display->drawText("UP/DOWN: Navigate", 10, controlY, TFT_WHITE, 1);
     display->drawText("A: Select", 10, controlY + 12, TFT_WHITE, 1);
     
@@ -93,7 +84,7 @@ void DoorChoiceState::drawFloorProgress() {
     Floor* currentFloor = dungeonManager->getCurrentFloor();
     if (currentFloor) {
         // Position at bottom of screen, above controls
-        int progressY = 250; // Above the control text
+        int progressY = 250;
         
         // Floor number
         String floorText = "Floor " + String(dungeonManager->getCurrentFloorNumber());
@@ -154,13 +145,13 @@ void DoorChoiceState::drawDoor(int doorIndex, int x, int y, int width, int heigh
     String icon = (doorIndex == 0) ? leftDoorIcon : rightDoorIcon;
     display->drawText(icon.c_str(), x + 20, y + 25, TFT_CYAN, 2);
     
-    // Description (simplified for narrow doors)
+    // Description (more space now with taller doors)
     String desc = (doorIndex == 0) ? leftDoorDesc : rightDoorDesc;
     
     // Break into multiple lines
-    int startY = y + 50;
+    int startY = y + 55;
     int lineHeight = 12;
-    int maxChars = 8; // Max chars per line for narrow door
+    int maxChars = 10; // More chars per line with wider doors
     
     String currentLine = "";
     int currentY = startY;
@@ -185,18 +176,18 @@ void DoorChoiceState::drawDoor(int doorIndex, int x, int y, int width, int heigh
 }
 
 void DoorChoiceState::handleInput() {
-    // Navigation with UP/DOWN
+    // Navigation with UP/DOWN (only 2 options now)
     if (input->wasPressed(Button::UP)) {
         selectedOption--;
         if (selectedOption < 0) {
-            selectedOption = maxOptions - 1;  // Wrap to bottom (library)
+            selectedOption = maxOptions - 1;  // Wrap to right door
         }
     }
     
     if (input->wasPressed(Button::DOWN)) {
         selectedOption++;
         if (selectedOption >= maxOptions) {
-            selectedOption = 0;  // Wrap to top (left door)
+            selectedOption = 0;  // Wrap to left door
         }
     }
     
@@ -218,8 +209,8 @@ void DoorChoiceState::handleInput() {
                         requestStateChange(StateTransition::COMBAT);
                         break;
                     case ROOM_SHOP:
-                        Serial.println("-> Going to Shop Room");
-                        requestStateChange(StateTransition::SHOP);
+                        Serial.println("-> Going to Library (Shop replaced with Library)");
+                        requestStateChange(StateTransition::LIBRARY);
                         break;
                     case ROOM_TREASURE:
                         Serial.println("-> Going to Treasure Room");
@@ -249,8 +240,8 @@ void DoorChoiceState::handleInput() {
                         requestStateChange(StateTransition::COMBAT);
                         break;
                     case ROOM_SHOP:
-                        Serial.println("-> Going to Shop Room");
-                        requestStateChange(StateTransition::SHOP);
+                        Serial.println("-> Going to Library (Shop replaced with Library)");
+                        requestStateChange(StateTransition::LIBRARY);
                         break;
                     case ROOM_TREASURE:
                         Serial.println("-> Going to Treasure Room");
@@ -264,43 +255,12 @@ void DoorChoiceState::handleInput() {
             } else {
                 Serial.println("ERROR: Failed to select right door room");
             }
-        } else if (selectedOption == 2) {
-            // Library - go to library room state
-            Serial.println("DEBUG: Selected LIBRARY - about to request state change");
-            Serial.println("DEBUG: Current state before transition: " + String((int)StateTransition::LIBRARY));
-            requestStateChange(StateTransition::LIBRARY);
-            Serial.println("DEBUG: State change requested successfully");
         }
     }
     
     // B button for quick exit (optional)
     if (input->wasPressed(Button::B)) {
         requestStateChange(StateTransition::MAIN_MENU);
-    }
-}
-
-void DoorChoiceState::drawLibrary(int x, int y, int width, int height, bool selected) {
-    // Library border
-    uint16_t borderColor = selected ? TFT_YELLOW : TFT_WHITE;
-    uint16_t bgColor = selected ? TFT_BLUE : TFT_BLACK;
-    
-    // Draw library frame
-    display->drawRect(x, y, width, height, borderColor);
-    display->fillRect(x+1, y+1, width-2, height-2, bgColor);
-    
-    // Library icon (magical book)
-    display->drawText("[*]", x + width/2 - 8, y + 8, TFT_PURPLE, 2);
-    
-    // Label
-    display->drawText("LIBRARY", x + 15, y + 25, TFT_WHITE);
-    
-    // Description
-    display->drawText("Learn & Rest", x + 8, y + 35, TFT_CYAN, 1);
-    
-    // Selection indicator
-    if (selected) {
-        display->drawText(">", x - 8, y + height/2, TFT_YELLOW);
-        display->drawText("<", x + width + 1, y + height/2, TFT_YELLOW);
     }
 }
 

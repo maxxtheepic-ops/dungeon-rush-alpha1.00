@@ -2,14 +2,14 @@
 #define COMBAT_ROOM_STATE_H
 
 #include "RoomState.h"
-#include "../menus/CombatMenu.h"
+#include "../menus/SpellCombatMenu.h"  // CHANGED: Use SpellCombatMenu instead of CombatMenu
 #include "../combat/combat_manager.h"
 #include "../combat/CombatHUD.h"
 
 class CombatRoomState : public RoomState {
 private:
-    // Combat-specific systems
-    CombatMenu* combatMenu;
+    // Combat-specific systems - UPDATED for spell combat
+    SpellCombatMenu* spellCombatMenu;  // CHANGED: Use spell combat menu
     CombatManager* combatManager;
     CombatHUD* combatHUD;
     

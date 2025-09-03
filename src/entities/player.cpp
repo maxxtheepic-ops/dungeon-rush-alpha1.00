@@ -27,6 +27,9 @@ Player::Player() : Entity("Wizard", WIZARD_START_HP, WIZARD_START_ATK, WIZARD_ST
         spellLibrary->equipSpell(spell->getID(), 0); // Equip to slot 1
     }
     
+    // Initialize scroll inventory
+    scrollInventory.clear();
+    
     healthPotions = STARTING_POTIONS;
     manaPotions = 2; // Start with some mana potions
     gold = STARTING_GOLD;
@@ -59,6 +62,9 @@ Player::Player(String playerName) : Entity(playerName, WIZARD_START_HP, WIZARD_S
         spellLibrary->equipSpell(spell->getID(), 0); // Equip to slot 1
     }
     
+    // Initialize scroll inventory
+    scrollInventory.clear();
+    
     healthPotions = STARTING_POTIONS;
     manaPotions = 2;
     gold = STARTING_GOLD;
@@ -84,6 +90,7 @@ Player::Player(String playerName, int hp, int atk, int def, int spd, int mana) :
     equipmentMana = 0;
     
     spellLibrary = new SpellLibrary();
+    scrollInventory.clear();
     
     healthPotions = STARTING_POTIONS;
     manaPotions = 2;
@@ -94,7 +101,127 @@ Player::Player(String playerName, int hp, int atk, int def, int spd, int mana) :
 
 Player::~Player() {
     delete spellLibrary;
+    
+    // Clean up scroll inventory
+    clearAllScrolls();
 }
+
+//============================================================================
+// SCROLL INVENTORY SYSTEM IMPLEMENTATION
+//============================================================================
+
+bool Player::addScroll(Spell* scroll) {
+    if (!scroll) return false;
+    
+    if (!hasScrollSpace()) {
+        Serial.println("Scroll inventory is full! (Max: " + String(MAX_SCROLLS) + ")");
+        return false;
+    }
+    
+    scrollInventory.push_back(scroll);
+    Serial.println("Added scroll to inventory: " + scroll->getName() + " (" + String(scrollInventory.size()) + "/" + String(MAX_SCROLLS) + ")");
+    return true;
+}
+
+bool Player::removeScroll(int scrollIndex) {
+    if (scrollIndex < 0 || scrollIndex >= scrollInventory.size()) {
+        return false;
+    }
+    
+    Spell* scroll = scrollInventory[scrollIndex];
+    String scrollName = scroll->getName();
+    
+    delete scroll;
+    scrollInventory.erase(scrollInventory.begin() + scrollIndex);
+    
+    Serial.println("Removed scroll from inventory: " + scrollName);
+    return true;
+}
+
+bool Player::learnSpellFromScroll(int scrollIndex) {
+    if (scrollIndex < 0 || scrollIndex >= scrollInventory.size()) {
+        Serial.println("Invalid scroll index: " + String(scrollIndex));
+        return false;
+    }
+    
+    Spell* scroll = scrollInventory[scrollIndex];
+    
+    // Check if player already knows this spell
+    if (spellLibrary->hasSpell(scroll->getID())) {
+        Serial.println("Already know spell: " + scroll->getName());
+        return false;
+    }
+    
+    // Create a new spell instance for the spell library
+    Spell* spellCopy = SpellFactory::createSpell(scroll->getID());
+    if (!spellCopy) {
+        Serial.println("Failed to create spell copy for: " + scroll->getName());
+        return false;
+    }
+    
+    // Learn the spell
+    if (spellLibrary->learnSpell(spellCopy)) {
+        String spellName = scroll->getName();
+        
+        // Remove the scroll from inventory (consume it)
+        delete scroll;
+        scrollInventory.erase(scrollInventory.begin() + scrollIndex);
+        
+        Serial.println("Learned spell from scroll: " + spellName);
+        return true;
+    } else {
+        // Failed to learn - clean up the copy
+        delete spellCopy;
+        Serial.println("Failed to learn spell from scroll: " + scroll->getName());
+        return false;
+    }
+}
+
+std::vector<Spell*> Player::getScrollInventory() const {
+    return scrollInventory;
+}
+
+int Player::getScrollCount() const {
+    return scrollInventory.size();
+}
+
+bool Player::hasScrolls() const {
+    return !scrollInventory.empty();
+}
+
+bool Player::hasScrollSpace() const {
+    return scrollInventory.size() < MAX_SCROLLS;
+}
+
+void Player::clearAllScrolls() {
+    for (Spell* scroll : scrollInventory) {
+        delete scroll;
+    }
+    scrollInventory.clear();
+    Serial.println("Cleared all scrolls from inventory");
+}
+
+void Player::displayScrollInventory() const {
+    Serial.println("=== SCROLL INVENTORY ===");
+    Serial.println("Scrolls: " + String(scrollInventory.size()) + "/" + String(MAX_SCROLLS));
+    
+    if (scrollInventory.empty()) {
+        Serial.println("No scrolls in inventory.");
+        Serial.println("Find them in treasure chests or defeat bosses!");
+        return;
+    }
+    
+    for (int i = 0; i < scrollInventory.size(); i++) {
+        Spell* scroll = scrollInventory[i];
+        Serial.println(String(i + 1) + ". " + scroll->getName() + 
+                      " (" + scroll->getElementName() + 
+                      ") - Power: " + String(scroll->getBasePower()));
+    }
+}
+
+//============================================================================
+// EXISTING PLAYER METHODS (unchanged)
+//============================================================================
 
 // Equipment system with mana support
 void Player::addEquipmentBonus(int hpBonus, int atkBonus, int defBonus, int spdBonus, int manaBonus) {
@@ -407,6 +534,9 @@ void Player::resetToBaseStats() {
     // Clear spell effects
     clearSpellEffects();
     
+    // Clear all scrolls
+    clearAllScrolls();
+    
     // Reset spell library to starter spell
     delete spellLibrary;
     spellLibrary = new SpellLibrary();
@@ -418,7 +548,7 @@ void Player::resetToBaseStats() {
     
     updateStatsFromEquipment();
     
-    Serial.println("Player stats reset to base wizard values");
+    Serial.println("Player stats reset to base wizard values (including scrolls cleared)");
 }
 
 void Player::resetMana() {
@@ -447,6 +577,7 @@ void Player::displaySpellStatus() const {
     Serial.println("Gold: " + String(gold));
     Serial.println("Health Potions: " + String(healthPotions));
     Serial.println("Mana Potions: " + String(manaPotions));
+    Serial.println("Scrolls: " + String(scrollInventory.size()) + "/" + String(MAX_SCROLLS));
     
     Serial.println("\n=== EQUIPPED SPELLS ===");
     spellLibrary->displayEquippedSpells();
@@ -454,6 +585,11 @@ void Player::displaySpellStatus() const {
     if (!activeEffects.empty()) {
         Serial.println("\n=== ACTIVE EFFECTS ===");
         displayActiveEffects();
+    }
+    
+    if (!scrollInventory.empty()) {
+        Serial.println();
+        displayScrollInventory();
     }
 }
 

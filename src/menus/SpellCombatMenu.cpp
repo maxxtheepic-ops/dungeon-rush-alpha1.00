@@ -8,9 +8,14 @@ SpellCombatMenu::SpellCombatMenu(Display* disp, Input* inp, Player* p)
     lastRenderedSelection = -1;
     needsRedraw = true;
     
-    // Initialize spell info
+    // Initialize spell info with proper struct construction
     for (int i = 0; i < 4; i++) {
-        spellInfo[i] = {"Empty", "----", TFT_GRAY, false, 0, 0};
+        spellInfo[i].name = "Empty";
+        spellInfo[i].shortName = "----";
+        spellInfo[i].color = 0x8410;  // Gray color (TFT_GRAY equivalent)
+        spellInfo[i].available = false;
+        spellInfo[i].manaCost = 0;
+        spellInfo[i].power = 0;
     }
 }
 
@@ -49,7 +54,13 @@ void SpellCombatMenu::updateSpellInfo() {
             spellInfo[i].manaCost = spell->getManaCost();
             spellInfo[i].power = spell->getBasePower();
         } else {
-            spellInfo[i] = {"Empty", "----", TFT_GRAY, false, 0, 0};
+            // Set struct members individually
+            spellInfo[i].name = "Empty";
+            spellInfo[i].shortName = "----";
+            spellInfo[i].color = 0x8410;  // Gray color
+            spellInfo[i].available = false;
+            spellInfo[i].manaCost = 0;
+            spellInfo[i].power = 0;
         }
     }
 }
@@ -128,7 +139,7 @@ void SpellCombatMenu::drawSpellSlot(int slot, int x, int y, bool selected) {
     
     if (info.name != "Empty") {
         // Spell name (shortened)
-        uint16_t textColor = info.available ? info.color : TFT_GRAY;
+        uint16_t textColor = info.available ? info.color : 0x8410;  // Use gray instead of TFT_GRAY
         display->drawText(info.shortName.c_str(), x + 3, y + 12, textColor, 1);
         
         // Mana cost
@@ -137,7 +148,7 @@ void SpellCombatMenu::drawSpellSlot(int slot, int x, int y, bool selected) {
         // Power indicator
         display->drawText(String(info.power).c_str(), x + 3, y + 22, TFT_YELLOW, 1);
     } else {
-        display->drawText("Empty", x + 3, y + 15, TFT_GRAY, 1);
+        display->drawText("Empty", x + 3, y + 15, 0x8410, 1);  // Use gray instead of TFT_GRAY
     }
     
     // Selection indicator

@@ -1,10 +1,11 @@
 #include "RoomState.h"
 
-RoomState::RoomState(Display* disp, Input* inp, Player* p, Enemy* e, DungeonManager* dm) 
+RoomState::RoomState(Display* disp, Input* inp, Player* p, Enemy* e, DungeonManager* dm, GameStateManager* gsm) 
     : GameState(disp, inp) {
     player = p;
     currentEnemy = e;
     dungeonManager = dm;
+    gameStateManager = gsm;  // NEW: Store GameStateManager reference
     currentRoom = nullptr;
     roomCompleted = false;
     roomEntered = false;

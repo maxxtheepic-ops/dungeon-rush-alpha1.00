@@ -13,6 +13,10 @@
 #include "../entities/player.h"
 #include "../entities/enemy.h"
 #include "../dungeon/DungeonManager.h"
+#include <vector>
+
+// Forward declarations
+class Spell;
 
 class GameStateManager {
 private:
@@ -24,6 +28,9 @@ private:
     Player* player;
     Enemy* currentEnemy;
     DungeonManager* dungeonManager;
+    
+    // Global scroll inventory system
+    std::vector<Spell*> availableScrolls;  // NEW: Scrolls found but not yet learned
     
     // State management
     GameState* currentState;
@@ -45,6 +52,9 @@ private:
     void showGameOverScreen();      // show the game over screen
     void handleGameOverScreen();    // handle input on game over screen
     
+    // Scroll inventory management
+    void clearAllScrolls();  // Called during reset
+    
 public:
     GameStateManager(Display* disp, Input* inp);
     ~GameStateManager();
@@ -60,6 +70,13 @@ public:
     
     // Dungeon access (for states that need it)
     DungeonManager* getDungeonManager() const { return dungeonManager; }
+    
+    // NEW: Global scroll inventory system
+    void addScroll(Spell* scroll);              // Add scroll to global inventory
+    std::vector<Spell*> getAvailableScrolls();  // Get all available scrolls
+    void removeScroll(int index);               // Remove scroll by index
+    void transferScrollsToLibrary();            // Transfer scrolls to library state
+    bool hasScrolls() const;                    // Check if any scrolls available
 };
 
 #endif

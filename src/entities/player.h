@@ -54,6 +54,10 @@ private:
     // Spell system
     SpellLibrary* spellLibrary;
     
+    // NEW: Scroll inventory system
+    std::vector<Spell*> scrollInventory;
+    static const int MAX_SCROLLS = 20;  // Maximum scrolls player can carry
+    
     // Active spell effects (buffs/debuffs)
     std::vector<ActiveSpellEffect> activeEffects;
     
@@ -104,6 +108,16 @@ public:
     std::vector<Spell*> getEquippedSpells() const;
     bool hasSpellEquipped() const;
     
+    // NEW: Scroll inventory management
+    bool addScroll(Spell* scroll);              // Add scroll to inventory
+    bool removeScroll(int scrollIndex);         // Remove scroll by index
+    bool learnSpellFromScroll(int scrollIndex); // Learn spell and consume scroll
+    std::vector<Spell*> getScrollInventory() const;  // Get all scrolls
+    int getScrollCount() const;                 // Get number of scrolls
+    bool hasScrolls() const;                    // Check if player has any scrolls
+    bool hasScrollSpace() const;                // Check if can carry more scrolls
+    void clearAllScrolls();                     // Clear all scrolls (for game reset)
+    
     // Spell effect management
     void addSpellEffect(SpellEffect effect, int value, int duration, String sourceName = "");
     void updateSpellEffects(); // Called each turn
@@ -149,6 +163,7 @@ public:
     // Display helpers
     void displaySpellStatus() const;
     void displayActiveEffects() const;
+    void displayScrollInventory() const;  // NEW: Display scroll inventory
     
     virtual ~Player();
 };

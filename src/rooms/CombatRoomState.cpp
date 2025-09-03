@@ -2,7 +2,8 @@
 
 CombatRoomState::CombatRoomState(Display* disp, Input* inp, Player* p, Enemy* e, DungeonManager* dm) 
     : RoomState(disp, inp, p, e, dm) {
-    combatMenu = new CombatMenu(display, input);
+    // Use spell combat menu instead of regular combat menu
+    spellCombatMenu = new SpellCombatMenu(display, input, p);
     combatManager = new CombatManager();
     combatHUD = new CombatHUD(display);
     combatActive = false;
@@ -10,7 +11,7 @@ CombatRoomState::CombatRoomState(Display* disp, Input* inp, Player* p, Enemy* e,
 }
 
 CombatRoomState::~CombatRoomState() {
-    delete combatMenu;
+    delete spellCombatMenu;
     delete combatManager;
     delete combatHUD;
 }
@@ -32,22 +33,24 @@ void CombatRoomState::handleRoomInteraction() {
             
             // Now process the result
             if (combatManager->getCombatResult() == RESULT_VICTORY) {
-                // Check if this was a boss room
+                // Check if this was a boss room - UPDATED: Auto go to library
                 if (currentRoom && currentRoom->getType() == ROOM_BOSS) {
                     Serial.println("=== BOSS DEFEATED ===");
-                    Serial.println("Advancing to next floor!");
-                    Serial.println("Current floor: " + String(dungeonManager->getCurrentFloorNumber()));
+                    Serial.println("Boss defeated! Automatically going to library...");
                     
-                    // Advance to next floor instead of just completing room
+                    // Mark room as completed first
+                    completeRoom();
+                    
+                    // Advance to next floor
                     dungeonManager->advanceToNextFloor();
-                    
                     Serial.println("Advanced to floor: " + String(dungeonManager->getCurrentFloorNumber()));
-                    Serial.println("===================");
                     
-                    // Return to door choice with new floor
-                    requestStateChange(StateTransition::DOOR_CHOICE);
+                    // Go directly to library (automatic reward for defeating boss)
+                    requestStateChange(StateTransition::LIBRARY);
+                    Serial.println("=== GOING TO LIBRARY ===");
+                    return;
                 } else {
-                    // Regular room - normal completion
+                    // Regular room - normal completion, return to door choice
                     Serial.println("Regular enemy defeated - completing room");
                     completeRoom(); // This will trigger return to door choice
                 }
@@ -57,7 +60,7 @@ void CombatRoomState::handleRoomInteraction() {
                 requestStateChange(StateTransition::GAME_OVER);
             }
         }
-    } else if (combatActive && combatMenu->getIsActive()) {
+    } else if (combatActive && spellCombatMenu->getIsActive()) {
         handleCombatInput();
     }
 }
@@ -66,7 +69,7 @@ void CombatRoomState::exitRoom() {
     Serial.println("Combat completed, exiting room");
     combatActive = false;
     showingResultScreen = false;
-    combatMenu->deactivate();
+    spellCombatMenu->deactivate();
     combatManager->endCombat();
 }
 
@@ -83,8 +86,8 @@ void CombatRoomState::startCombat() {
     // Start combat systems
     combatManager->startCombat(player, currentEnemy);
     combatHUD->drawFullCombatScreen(player, currentEnemy, combatManager->getTurnCounter());
-    combatMenu->activate();
-    combatMenu->render();
+    spellCombatMenu->activate();
+    spellCombatMenu->render();
     combatActive = true;
     
     Serial.println("=== COMBAT STARTED ===");
@@ -92,23 +95,29 @@ void CombatRoomState::startCombat() {
 }
 
 void CombatRoomState::handleCombatInput() {
-    MenuResult result = combatMenu->handleInput();
-    combatMenu->render();
+    MenuResult result = spellCombatMenu->handleInput();
+    spellCombatMenu->render();
     
     if (result == MenuResult::SELECTED) {
-        // Convert menu selection to PlayerAction
-        CombatAction menuAction = combatMenu->getSelectedAction();
+        // Convert spell menu selection to PlayerAction
+        SpellCombatAction menuAction = spellCombatMenu->getSelectedAction();
         PlayerAction playerAction;
         
         switch (menuAction) {
-            case CombatAction::ATTACK:
-                playerAction = ACTION_ATTACK;
+            case SpellCombatAction::CAST_SPELL_1:
+                playerAction = ACTION_CAST_SPELL_1;
                 break;
-            case CombatAction::DEFEND:
+            case SpellCombatAction::CAST_SPELL_2:
+                playerAction = ACTION_CAST_SPELL_2;
+                break;
+            case SpellCombatAction::CAST_SPELL_3:
+                playerAction = ACTION_CAST_SPELL_3;
+                break;
+            case SpellCombatAction::CAST_SPELL_4:
+                playerAction = ACTION_CAST_SPELL_4;
+                break;
+            case SpellCombatAction::DEFEND:
                 playerAction = ACTION_DEFEND;
-                break;
-            case CombatAction::ITEM:
-                playerAction = ACTION_USE_ITEM;
                 break;
         }
         
@@ -120,26 +129,22 @@ void CombatRoomState::handleCombatInput() {
         
         // Check if combat is over
         if (combatResult == RESULT_VICTORY) {
-                combatHUD->drawVictoryScreen();
-                combatActive = false;
-             combatMenu->deactivate();
-             showingResultScreen = true;
-    
-                // NEW: Check if this was a boss room - if so, advance floor immediately
-            if (currentRoom && currentRoom->getType() == ROOM_BOSS) {
-                Serial.println("Boss defeated! Advancing to next floor!");
-                // Don't call completeRoom() for boss - handle specially
-             } else {
-            // Regular room completion
-             Serial.println("Regular enemy defeated!");
-                }
+            combatHUD->drawVictoryScreen();
+            combatActive = false;
+            spellCombatMenu->deactivate();
+            showingResultScreen = true;
 
-            
-            // Don't call completeRoom() yet - wait for player input
+            if (currentRoom && currentRoom->getType() == ROOM_BOSS) {
+                Serial.println("Boss defeated! Will go to library after button press...");
+            } else {
+                Serial.println("Regular enemy defeated!");
+            }
+
+            // Wait for player input before processing victory
         } else if (combatResult == RESULT_DEFEAT) {
             combatHUD->drawDefeatScreen();
             combatActive = false;
-            combatMenu->deactivate();
+            spellCombatMenu->deactivate();
             showingResultScreen = true;  // Wait for player input
             
             // Log what type of room we died in
@@ -149,12 +154,10 @@ void CombatRoomState::handleCombatInput() {
                     Serial.println("Death was in boss room!");
                 }
             }
-            
-            // Don't call requestStateChange() yet - wait for player input
         } else {
             // Combat continues
-            combatMenu->activate();
-            combatMenu->render();
+            spellCombatMenu->activate();
+            spellCombatMenu->render();
         }
     }
 }

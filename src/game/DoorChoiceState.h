@@ -10,8 +10,8 @@ private:
     
     // Door choice data
     std::vector<DoorChoice> availableChoices;
-    int selectedOption;  // 0=left door, 1=right door, 2=library
-    int maxOptions;      // Will be 3 (left, right, library)
+    int selectedOption;  // 0=left door, 1=right door (no library option)
+    int maxOptions;      // Will be 2 (left, right only)
     bool screenDrawn;
     int lastSelectedOption;
     
@@ -22,7 +22,6 @@ private:
     // Helper methods
     void generateDoorChoices();
     void drawDoor(int doorIndex, int x, int y, int width, int height, bool selected);
-    void drawLibrary(int x, int y, int width, int height, bool selected);  // Add this declaration
     String getDoorIconText(DoorIcon icon);
     void drawFloorProgress();
     void drawProgressBar(int x, int y, int width, int height, int current, int max);

@@ -2,12 +2,14 @@
 #define LIBRARY_ROOM_STATE_H
 
 #include "../game/GameState.h"
+#include <vector>  // ADD THIS LINE
 
 // Forward declarations
 class Player;
 class Enemy;
 class DungeonManager;
 class Spell;
+class GameStateManager;
 
 enum class LibraryAction {
     REST = 0,           // Restore health and mana
@@ -30,6 +32,7 @@ private:
     Player* player;
     Enemy* currentEnemy;
     DungeonManager* dungeonManager;
+    GameStateManager* gameStateManager;  // Reference to global systems
     
     // Available scrolls (found in chests/boss drops)
     std::vector<Spell*> availableScrolls;
@@ -77,7 +80,6 @@ private:
     void completeRoom();
     
     // Scroll management
-    void addAvailableScroll(Spell* spell);
     void removeScroll(int index);
     bool hasScrolls() const;
     
@@ -90,10 +92,14 @@ public:
     void update() override;
     void exit() override;
     
-    // Scroll management (called by other systems)
+    // Scroll management (called by other systems) - PUBLIC
+    void addAvailableScroll(Spell* spell);
     void giveScrollReward(int spellID);
     void giveBossScrollReward();
     void giveRandomScroll();
+    
+    // GameStateManager access
+    void setGameStateManager(GameStateManager* gsm) { gameStateManager = gsm; }
 };
 
 #endif // LIBRARY_ROOM_STATE_H

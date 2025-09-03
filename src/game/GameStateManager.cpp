@@ -1,4 +1,5 @@
 #include "GameStateManager.h"
+#include "../spells/spell.h"
 
 GameStateManager::GameStateManager(Display* disp, Input* inp) {
     display = disp;
@@ -9,13 +10,22 @@ GameStateManager::GameStateManager(Display* disp, Input* inp) {
     currentEnemy = new Enemy();
     dungeonManager = new DungeonManager(player);
     
-    // Initialize states
+    // Initialize scroll inventory
+    availableScrolls.clear();
+    
+    // Initialize states with GameStateManager reference
     mainMenuState = new MainMenuState(display, input);
     doorChoiceState = new DoorChoiceState(display, input, dungeonManager);
     combatRoomState = new CombatRoomState(display, input, player, currentEnemy, dungeonManager);
-    libraryRoomState = new LibraryRoomState(display, input, player, currentEnemy, dungeonManager);  // CHANGED: Library replaces campfire
+    libraryRoomState = new LibraryRoomState(display, input, player, currentEnemy, dungeonManager);
     shopRoomState = new ShopRoomState(display, input, player, currentEnemy, dungeonManager);
     treasureRoomState = new TreasureRoomState(display, input, player, currentEnemy, dungeonManager);
+    
+    // Set GameStateManager references for room states that need global access
+    if (libraryRoomState) libraryRoomState->setGameStateManager(this);
+    if (treasureRoomState) treasureRoomState->setGameStateManager(this);
+    if (combatRoomState) combatRoomState->setGameStateManager(this);
+    if (shopRoomState) shopRoomState->setGameStateManager(this);
     
     // Start with main menu
     currentState = mainMenuState;
@@ -23,6 +33,9 @@ GameStateManager::GameStateManager(Display* disp, Input* inp) {
 }
 
 GameStateManager::~GameStateManager() {
+    // Clean up scrolls
+    clearAllScrolls();
+    
     delete player;
     delete currentEnemy;
     delete dungeonManager;
@@ -124,6 +137,8 @@ void GameStateManager::changeState(StateTransition newState) {
                 currentState = mainMenuState;
                 break;
             }
+            // Transfer scrolls to library before entering
+            transferScrollsToLibrary();
             currentState = libraryRoomState;
             Serial.println("DEBUG: Switching to Library - ASSIGNED");
             break;
@@ -291,6 +306,9 @@ void GameStateManager::resetDungeonProgress() {
 void GameStateManager::fullGameReset() {
     Serial.println("DEBUG: Starting full game reset");
     
+    // Clear all scrolls
+    clearAllScrolls();
+    
     // Reset player to base wizard stats (lose all equipment/progress)
     player->resetToBaseStats();
     player->heal(player->getMaxHP());
@@ -302,4 +320,57 @@ void GameStateManager::fullGameReset() {
     resetDungeonProgress();
     
     Serial.println("DEBUG: Full game reset complete - fresh wizard start!");
+}
+
+// NEW: Global scroll inventory system implementation
+void GameStateManager::addScroll(Spell* scroll) {
+    if (scroll) {
+        availableScrolls.push_back(scroll);
+        Serial.println("GameStateManager: Added scroll to global inventory: " + scroll->getName());
+        Serial.println("Total scrolls available: " + String(availableScrolls.size()));
+    }
+}
+
+std::vector<Spell*> GameStateManager::getAvailableScrolls() {
+    return availableScrolls;
+}
+
+void GameStateManager::removeScroll(int index) {
+    if (index >= 0 && index < availableScrolls.size()) {
+        Spell* scroll = availableScrolls[index];
+        Serial.println("GameStateManager: Removing scroll: " + (scroll ? scroll->getName() : "null"));
+        availableScrolls.erase(availableScrolls.begin() + index);
+        // Don't delete the scroll here - it should be transferred to player's library
+    }
+}
+
+void GameStateManager::transferScrollsToLibrary() {
+    if (libraryRoomState && !availableScrolls.empty()) {
+        Serial.println("GameStateManager: Transferring " + String(availableScrolls.size()) + " scrolls to library");
+        
+        // Transfer each scroll to the library
+        for (Spell* scroll : availableScrolls) {
+            if (scroll) {
+                libraryRoomState->addAvailableScroll(scroll);
+                Serial.println("Transferred scroll: " + scroll->getName());
+            }
+        }
+        
+        // Clear the global list (scrolls are now owned by library)
+        availableScrolls.clear();
+        Serial.println("Global scroll inventory cleared after transfer");
+    } else if (availableScrolls.empty()) {
+        Serial.println("GameStateManager: No scrolls to transfer to library");
+    }
+}
+
+void GameStateManager::clearAllScrolls() {
+    // Clean up all scrolls in global inventory
+    for (Spell* scroll : availableScrolls) {
+        if (scroll) {
+            delete scroll;
+        }
+    }
+    availableScrolls.clear();
+    Serial.println("GameStateManager: Cleared all scrolls from global inventory");
 }

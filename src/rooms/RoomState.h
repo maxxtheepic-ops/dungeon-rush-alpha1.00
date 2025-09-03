@@ -7,6 +7,9 @@
 #include "../entities/enemy.h"
 #include "../dungeon/DungeonManager.h"
 
+// Forward declaration
+class GameStateManager;
+
 class RoomState : public GameState {
 protected:
     // Shared room data
@@ -14,13 +17,14 @@ protected:
     Player* player;
     Enemy* currentEnemy;
     DungeonManager* dungeonManager;
+    GameStateManager* gameStateManager;  // NEW: Access to global systems
     
     // Room state
     bool roomCompleted;
     bool roomEntered;
     
 public:
-    RoomState(Display* disp, Input* inp, Player* p, Enemy* e, DungeonManager* dm);
+    RoomState(Display* disp, Input* inp, Player* p, Enemy* e, DungeonManager* dm, GameStateManager* gsm = nullptr);
     virtual ~RoomState() = default;
     
     // Base GameState interface
@@ -40,6 +44,9 @@ public:
     // Common room completion
     void completeRoom();
     bool isRoomCompleted() const { return roomCompleted; }
+    
+    // NEW: Set GameStateManager reference
+    void setGameStateManager(GameStateManager* gsm) { gameStateManager = gsm; }
     
 protected:
     // Helper for transitioning back to door choice
