@@ -99,7 +99,7 @@
 #define PLAYER_START_SPD    WIZARD_START_SPD
 
 // Mana system
-#define MANA_REGEN_PER_TURN 1       // Natural mana regeneration
+#define MANA_REGEN_PER_TURN 0       // Natural mana regeneration
 #define MANA_POTION_RESTORE 25      // Mana restored by potion
 #define MANA_POTION_COST    20      // Cost of mana potion
 

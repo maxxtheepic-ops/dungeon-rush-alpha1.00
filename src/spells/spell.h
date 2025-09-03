@@ -24,8 +24,7 @@ private:
     ElementType element;
     SpellEffect primaryEffect;
     
-    // Damage/healing values
-    int basePower;
+    // Mana cost
     int manaCost;
     
     // Additional effects
@@ -35,7 +34,8 @@ private:
     int duration;
     
 protected:
-    String description;  // Changed to protected so subclasses can access it
+    String description;  // Protected so subclasses can access it
+    int basePower;      // CHANGED: Made protected so Meditate can access it
     
 public:
     // Constructor
@@ -63,8 +63,8 @@ public:
     virtual String getEffectName() const;
     virtual uint16_t getElementColor() const;
     
-    // Synergy calculation
-    int calculateSynergyBonus(const std::vector<Spell*>& recentSpells) const;
+    // Synergy calculation - CHANGED: Made virtual so it can be overridden
+    virtual int calculateSynergyBonus(const std::vector<Spell*>& recentSpells) const;
     
     // Virtual destructor
     virtual ~Spell() {}
@@ -121,6 +121,52 @@ public:
 //============================================================================
 // SPECIFIC SPELL IMPLEMENTATIONS
 //============================================================================
+
+// ARCANE SPELLS (including Meditate)
+class MagicMissile : public Spell {
+public:
+    MagicMissile() : Spell(31, "Magic Missile", ELEMENT_ARCANE, EFFECT_DAMAGE, 18, 4) {
+        description = "Reliable arcane projectiles that never miss.";
+        // Always hits, good starter spell
+    }
+};
+
+// NEW: Meditate spell with self-synergy
+class Meditate : public Spell {
+private:
+    static int consecutiveUses; // Track consecutive uses across all instances
+    
+public:
+    Meditate() : Spell(34, "Meditate", ELEMENT_ARCANE, EFFECT_HEAL, 5, 0) {
+        description = "Focus your mind to restore mana. Grows stronger with consecutive use.";
+    }
+    
+    // Override cast method for special self-synergy logic
+    bool cast(Player* caster, Enemy* target, const std::vector<Spell*>& otherSpells = {}) override;
+    
+    // Custom synergy calculation for self-synergy - CHANGED: Now properly overrides
+    int calculateSynergyBonus(const std::vector<Spell*>& recentSpells) const override;
+    
+    // Reset consecutive uses (called when other spells are cast)
+    static void resetConsecutiveUses() { consecutiveUses = 0; }
+    static int getConsecutiveUses() { return consecutiveUses; }
+};
+
+class ArcaneShield : public Spell {
+public:
+    ArcaneShield() : Spell(32, "Arcane Shield", ELEMENT_ARCANE, EFFECT_SHIELD, 20, 8) {
+        description = "A shimmering barrier of pure magical energy.";
+        addSecondaryEffect(EFFECT_BUFF, 5, 3); // +5 to all resistances
+    }
+};
+
+class PowerSurge : public Spell {
+public:
+    PowerSurge() : Spell(33, "Power Surge", ELEMENT_ARCANE, EFFECT_BUFF, 12, 10) {
+        description = "Channels raw magic to enhance all abilities.";
+        addSecondaryEffect(EFFECT_BUFF, 8, 4); // +8 to all stats for 4 turns
+    }
+};
 
 // FIRE SPELLS
 class Fireball : public Spell {
@@ -193,31 +239,6 @@ public:
     }
 };
 
-// ARCANE SPELLS
-class MagicMissile : public Spell {
-public:
-    MagicMissile() : Spell(31, "Magic Missile", ELEMENT_ARCANE, EFFECT_DAMAGE, 18, 4) {
-        description = "Reliable arcane projectiles that never miss.";
-        // Always hits, good starter spell
-    }
-};
-
-class ArcaneShield : public Spell {
-public:
-    ArcaneShield() : Spell(32, "Arcane Shield", ELEMENT_ARCANE, EFFECT_SHIELD, 20, 8) {
-        description = "A shimmering barrier of pure magical energy.";
-        addSecondaryEffect(EFFECT_BUFF, 5, 3); // +5 to all resistances
-    }
-};
-
-class PowerSurge : public Spell {
-public:
-    PowerSurge() : Spell(33, "Power Surge", ELEMENT_ARCANE, EFFECT_BUFF, 12, 10) {
-        description = "Channels raw magic to enhance all abilities.";
-        addSecondaryEffect(EFFECT_BUFF, 8, 4); // +8 to all stats for 4 turns
-    }
-};
-
 // EARTH SPELLS
 class StoneSpear : public Spell {
 public:
@@ -275,7 +296,7 @@ class SpellFactory {
 public:
     static Spell* createSpell(int spellID);
     static Spell* createRandomSpell(int minTier = 1, int maxTier = 3);
-    static std::vector<Spell*> createStarterSpells(); // Returns Magic Missile
+    static std::vector<Spell*> createStarterSpells(); // Returns Magic Missile + Meditate
     static std::vector<Spell*> createSpellsOfElement(ElementType element);
     static std::vector<Spell*> createAllSpells();
     

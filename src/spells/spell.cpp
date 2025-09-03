@@ -3,6 +3,9 @@
 #include "../entities/enemy.h"
 #include <TFT_eSPI.h>  // Add this for TFT color constants
 
+// Static member definition for Meditate
+int Meditate::consecutiveUses = 0;
+
 //============================================================================
 // SPELL BASE CLASS IMPLEMENTATION
 //============================================================================
@@ -40,6 +43,11 @@ bool Spell::cast(Player* caster, Enemy* target, const std::vector<Spell*>& other
         return false;
     }
     
+    // Reset Meditate consecutive uses if this isn't a Meditate spell
+    if (spellID != 34) {  // 34 is Meditate's ID
+        Meditate::resetConsecutiveUses();
+    }
+    
     // Spend mana
     caster->spendMana(manaCost);
     
@@ -58,8 +66,18 @@ bool Spell::cast(Player* caster, Enemy* target, const std::vector<Spell*>& other
             break;
             
         case EFFECT_HEAL:
-            caster->heal(totalPower);
-            Serial.println(name + " heals " + String(totalPower) + " HP!");
+            if (spellID == 34) {
+                // Special handling for Meditate - it restores mana, not HP
+                caster->restoreMana(totalPower);
+                Serial.println(name + " restores " + String(totalPower) + " mana!");
+                if (synergyBonus > 0) {
+                    Serial.println("Deep meditation bonus: +" + String(synergyBonus) + " mana!");
+                }
+            } else {
+                // Regular healing spells restore HP
+                caster->heal(totalPower);
+                Serial.println(name + " heals " + String(totalPower) + " HP!");
+            }
             break;
             
         case EFFECT_SHIELD:
@@ -88,8 +106,13 @@ bool Spell::cast(Player* caster, Enemy* target, const std::vector<Spell*>& other
     if (hasSecondaryEffect) {
         switch (secondaryEffect) {
             case EFFECT_HEAL:
-                caster->heal(secondaryPower);
-                Serial.println("  Also heals " + String(secondaryPower) + " HP!");
+                if (spellID == 34) {
+                    caster->restoreMana(secondaryPower);
+                    Serial.println("  Also restores " + String(secondaryPower) + " mana!");
+                } else {
+                    caster->heal(secondaryPower);
+                    Serial.println("  Also heals " + String(secondaryPower) + " HP!");
+                }
                 break;
             case EFFECT_DAMAGE_OVER_TIME:
                 target->takeDamage(secondaryPower);
@@ -187,6 +210,55 @@ int Spell::calculateSynergyBonus(const std::vector<Spell*>& recentSpells) const 
     }
     
     return bonus;
+}
+
+//============================================================================
+// MEDITATE SPELL IMPLEMENTATION
+//============================================================================
+
+bool Meditate::cast(Player* caster, Enemy* target, const std::vector<Spell*>& otherSpells) {
+    if (!caster) return false;
+    
+    // No mana cost for Meditate
+    
+    // Increment consecutive uses
+    consecutiveUses++;
+    
+    // Calculate mana restoration with self-synergy
+    int baseManaRestore = basePower; // 5 mana
+    int synergyBonus = calculateSynergyBonus(otherSpells);
+    int totalManaRestore = baseManaRestore + synergyBonus;
+    
+    // Restore mana
+    caster->restoreMana(totalManaRestore);
+    
+    // Show appropriate message based on consecutive uses
+    if (consecutiveUses == 1) {
+        Serial.println("Meditate restores " + String(totalManaRestore) + " mana.");
+    } else if (consecutiveUses == 2) {
+        Serial.println("Deeper meditation restores " + String(totalManaRestore) + " mana.");
+    } else {
+        Serial.println("Perfect focus restores " + String(totalManaRestore) + " mana!");
+    }
+    
+    if (synergyBonus > 0) {
+        Serial.println("Consecutive meditation bonus: +" + String(synergyBonus) + " mana!");
+    }
+    
+    return true;
+}
+
+int Meditate::calculateSynergyBonus(const std::vector<Spell*>& recentSpells) const {
+    // Self-synergy: Each consecutive use adds +5 mana, capping at +10 (total 15)
+    // consecutiveUses: 1 = +0, 2 = +5, 3+ = +10
+    
+    if (consecutiveUses <= 1) {
+        return 0; // First use, no bonus
+    } else if (consecutiveUses == 2) {
+        return 5; // Second consecutive use, +5 bonus
+    } else {
+        return 10; // Third+ consecutive use, +10 bonus (capping at 15 total)
+    }
 }
 
 //============================================================================
@@ -420,6 +492,7 @@ Spell* SpellFactory::createSpell(int spellID) {
         case 31: return new MagicMissile();
         case 32: return new ArcaneShield();
         case 33: return new PowerSurge();
+        case 34: return new Meditate();  // NEW: Meditate spell
         
         // Earth spells
         case 41: return new StoneSpear();
@@ -463,7 +536,8 @@ Spell* SpellFactory::createRandomSpell(int minTier, int maxTier) {
 
 std::vector<Spell*> SpellFactory::createStarterSpells() {
     std::vector<Spell*> starter;
-    starter.push_back(new MagicMissile()); // Reliable starter spell
+    starter.push_back(new MagicMissile()); // Reliable damage spell
+    starter.push_back(new Meditate());     // NEW: Mana restoration spell
     return starter;
 }
 
@@ -490,6 +564,7 @@ std::vector<Spell*> SpellFactory::createSpellsOfElement(ElementType element) {
             elementSpells.push_back(createSpell(31));
             elementSpells.push_back(createSpell(32));
             elementSpells.push_back(createSpell(33));
+            elementSpells.push_back(createSpell(34)); // NEW: Include Meditate
             break;
         case ELEMENT_EARTH:
             elementSpells.push_back(createSpell(41));
@@ -507,7 +582,7 @@ std::vector<Spell*> SpellFactory::createSpellsOfElement(ElementType element) {
 }
 
 std::vector<int> SpellFactory::getTier1Spells() {
-    return {1, 11, 21, 31, 41, 51}; // Basic spells from each element
+    return {1, 11, 21, 31, 34, 41, 51}; // Added 34 (Meditate) to tier 1
 }
 
 std::vector<int> SpellFactory::getTier2Spells() {

@@ -19,12 +19,14 @@ Player::Player() : Entity("Wizard", WIZARD_START_HP, WIZARD_START_ATK, WIZARD_ST
     equipmentSpeed = 0;
     equipmentMana = 0;
     
-    // Initialize spell library with starter spell
+    // Initialize spell library with TWO starter spells
     spellLibrary = new SpellLibrary();
     auto starterSpells = SpellFactory::createStarterSpells();
-    for (Spell* spell : starterSpells) {
+    for (int i = 0; i < starterSpells.size(); i++) {
+        Spell* spell = starterSpells[i];
         spellLibrary->learnSpell(spell);
-        spellLibrary->equipSpell(spell->getID(), 0); // Equip to slot 1
+        spellLibrary->equipSpell(spell->getID(), i); // Equip to slot 0 and 1
+        Serial.println("Starting with spell: " + spell->getName() + " equipped to slot " + String(i + 1));
     }
     
     // Initialize scroll inventory
@@ -54,12 +56,14 @@ Player::Player(String playerName) : Entity(playerName, WIZARD_START_HP, WIZARD_S
     equipmentSpeed = 0;
     equipmentMana = 0;
     
-    // Initialize spell library with starter spell
+    // Initialize spell library with TWO starter spells
     spellLibrary = new SpellLibrary();
     auto starterSpells = SpellFactory::createStarterSpells();
-    for (Spell* spell : starterSpells) {
+    for (int i = 0; i < starterSpells.size(); i++) {
+        Spell* spell = starterSpells[i];
         spellLibrary->learnSpell(spell);
-        spellLibrary->equipSpell(spell->getID(), 0); // Equip to slot 1
+        spellLibrary->equipSpell(spell->getID(), i); // Equip to slot 0 and 1
+        Serial.println("Starting with spell: " + spell->getName() + " equipped to slot " + String(i + 1));
     }
     
     // Initialize scroll inventory
@@ -480,12 +484,18 @@ bool Player::hasEnoughGold(int amount) const {
 
 // Wizard combat actions
 int Player::performAttack() {
+    // Reset Meditate consecutive uses when performing non-spell actions
+    Meditate::resetConsecutiveUses();
+    
     // Wizards have weak physical attacks
     resetDefense();
     return getEffectiveAttack() / 2; // Half damage for melee
 }
 
 int Player::performDefend() {
+    // Reset Meditate consecutive uses when performing non-spell actions
+    Meditate::resetConsecutiveUses();
+    
     // Magical defense - creates a temporary shield
     setDefending(true);
     int defenseValue = getEffectiveDefense() / 2;
@@ -498,6 +508,9 @@ int Player::performDefend() {
 }
 
 bool Player::performUseItem() {
+    // Reset Meditate consecutive uses when using items
+    Meditate::resetConsecutiveUses();
+    
     // For now, prioritize health potions
     if (getCurrentHP() < getMaxHP() && healthPotions > 0) {
         return useHealthPotion();
@@ -542,18 +555,22 @@ void Player::resetToBaseStats() {
     // Clear all scrolls
     clearAllScrolls();
     
-    // Reset spell library to starter spell
+    // Reset spell library to TWO starter spells
     delete spellLibrary;
     spellLibrary = new SpellLibrary();
     auto starterSpells = SpellFactory::createStarterSpells();
-    for (Spell* spell : starterSpells) {
+    for (int i = 0; i < starterSpells.size(); i++) {
+        Spell* spell = starterSpells[i];
         spellLibrary->learnSpell(spell);
-        spellLibrary->equipSpell(spell->getID(), 0);
+        spellLibrary->equipSpell(spell->getID(), i); // Equip to slot 0 and 1
     }
+    
+    // Reset Meditate's consecutive uses when player resets
+    Meditate::resetConsecutiveUses();
     
     updateStatsFromEquipment();
     
-    Serial.println("Player stats reset to base wizard values (including scrolls cleared)");
+    Serial.println("Player stats reset to base wizard values (including both starting spells)");
 }
 
 void Player::resetMana() {
