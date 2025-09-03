@@ -209,7 +209,8 @@ void DoorChoiceState::handleInput() {
                         requestStateChange(StateTransition::COMBAT);
                         break;
                     case ROOM_SHOP:
-                        Serial.println("-> Going to Library (Shop replaced with Library)");
+                        Serial.println("-> Going to Library (Shop Room converted to Library)");
+                        // CHANGED: Shop rooms now count as regular rooms that must be completed
                         requestStateChange(StateTransition::LIBRARY);
                         break;
                     case ROOM_TREASURE:
@@ -240,7 +241,8 @@ void DoorChoiceState::handleInput() {
                         requestStateChange(StateTransition::COMBAT);
                         break;
                     case ROOM_SHOP:
-                        Serial.println("-> Going to Library (Shop replaced with Library)");
+                        Serial.println("-> Going to Library (Shop Room converted to Library)");
+                        // CHANGED: Shop rooms now count as regular rooms that must be completed
                         requestStateChange(StateTransition::LIBRARY);
                         break;
                     case ROOM_TREASURE:

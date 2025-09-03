@@ -1,6 +1,7 @@
 #include "TreasureRoomState.h"
 #include "../spells/spell.h"
 #include "../game/GameStateManager.h"
+#include "../dungeon/Floor.h"  // ADDED: Need Floor class for room completion
 
 TreasureRoomState::TreasureRoomState(Display* disp, Input* inp, Player* p, Enemy* e, DungeonManager* dm) 
     : GameState(disp, inp) {
@@ -52,17 +53,17 @@ void TreasureRoomState::drawTreasureScreen() {
     display->drawText(("Gold: " + String(player->getGold())).c_str(), 
                      10, 110, TFT_YELLOW);
     
-    // Treasure description
+    // Treasure description - CHANGED: Only show scroll
     if (!treasureLooted) {
         display->drawText("You see:", 10, 140, TFT_WHITE);
         display->drawText("- Ancient scroll", 15, 155, TFT_PURPLE);
-        display->drawText("- Magical reagents", 15, 170, TFT_GREEN);
-        display->drawText("- Mystical gems", 15, 185, TFT_CYAN);
+        display->drawText("  glowing with", 15, 170, TFT_CYAN);
+        display->drawText("  mystical power", 15, 185, TFT_CYAN);
         
         // Menu options
         int yStart = 215;
         int ySpacing = 20;
-        const char* options[2] = {"Take Treasure", "Leave Empty-Handed"};
+        const char* options[2] = {"Take Scroll", "Leave Empty-Handed"};
         
         for (int i = 0; i < maxOptions; i++) {
             int yPos = yStart + (i * ySpacing);
@@ -142,22 +143,13 @@ void TreasureRoomState::handleTreasureInput() {
 }
 
 void TreasureRoomState::takeTreasure() {
-    // Generate random scroll reward
+    // CHANGED: Only generate scroll, no gold or potions
     Spell* foundScroll = generateRandomScroll();
     String scrollName = foundScroll ? foundScroll->getName() : "Unknown Scroll";
     String elementName = foundScroll ? foundScroll->getElementName() : "Arcane";
-    uint16_t elementColor = foundScroll ? foundScroll->getElementColor() : TFT_PURPLE;
     
-    // Give some gold and mana potions as bonus
-    int goldFound = 15 + (rand() % 25); // 15-40 gold
-    int manaPotionsFound = 1 + (rand() % 2); // 1-2 mana potions
-    
-    // Give rewards to player
-    player->addGold(goldFound);
-    player->addManaPotions(manaPotionsFound);
-    
-    // Show treasure result
-    showTreasureResult(foundScroll, goldFound, manaPotionsFound);
+    // Show treasure result - CHANGED: Only show scroll
+    showTreasureResult(foundScroll);
     
     // Give scroll to library for later access
     giveScrollToLibrary(foundScroll);
@@ -165,29 +157,35 @@ void TreasureRoomState::takeTreasure() {
     treasureLooted = true;
     screenDrawn = false; // Force redraw
     
-    Serial.println("Player found scroll: " + scrollName + " (" + elementName + "), " + 
-                  String(goldFound) + " gold, " + String(manaPotionsFound) + " mana potions");
+    Serial.println("Player found scroll: " + scrollName + " (" + elementName + ")");
+    
+    // ADDED: Immediately complete the room after taking treasure
+    Serial.println("DEBUG: Treasure taken, completing room immediately");
+    completeRoom();
 }
 
-void TreasureRoomState::showTreasureResult(Spell* foundScroll, int gold, int manaPotions) {
+void TreasureRoomState::showTreasureResult(Spell* foundScroll) {
     display->clear();
     
-    display->drawText("TREASURE FOUND!", 25, 60, TFT_YELLOW, 2);
+    display->drawText("SCROLL FOUND!", 25, 60, TFT_PURPLE, 2);
     
     if (foundScroll) {
         display->drawText("Ancient Scroll:", 25, 90, TFT_WHITE);
         display->drawText(foundScroll->getName().c_str(), 15, 105, foundScroll->getElementColor());
         display->drawText(("(" + foundScroll->getElementName() + " Magic)").c_str(), 20, 120, TFT_CYAN);
+        
+        // Show tier information
+        String tier = "Tier 1";
+        if (foundScroll->getBasePower() > 25) tier = "Tier 3";
+        else if (foundScroll->getBasePower() > 20) tier = "Tier 2";
+        display->drawText(tier.c_str(), 40, 135, TFT_YELLOW);
     }
     
-    display->drawText(("+" + String(gold) + " Gold").c_str(), 40, 140, TFT_YELLOW);
-    display->drawText(("+" + String(manaPotions) + " Mana Potions").c_str(), 25, 155, TFT_BLUE);
+    display->drawText("Visit the Library", 25, 160, TFT_PURPLE);
+    display->drawText("to read the scroll!", 20, 175, TFT_PURPLE);
     
-    display->drawText("Visit the Library", 25, 180, TFT_PURPLE);
-    display->drawText("to learn the spell!", 20, 195, TFT_PURPLE);
-    
-    display->drawText("Press any button", 25, 220, TFT_CYAN);
-    display->drawText("to continue", 40, 235, TFT_CYAN);
+    display->drawText("Press any button", 25, 200, TFT_CYAN);
+    display->drawText("to continue", 40, 215, TFT_CYAN);
     
     // Wait for input
     while (true) {
@@ -223,18 +221,36 @@ void TreasureRoomState::giveScrollToLibrary(Spell* scroll) {
         gameStateManager->addScroll(scroll);
         Serial.println("Scroll will be available in the Library!");
     } else if (scroll) {
-        Serial.println("WARNING: No GameStateManager reference, adding scroll directly to player");
-        // Fallback: add directly to player's spell library
-        if (player->learnSpell(scroll)) {
-            Serial.println("Added scroll directly to player's grimoire");
-        } else {
-            Serial.println("Player already knows this spell, deleting scroll");
-            delete scroll;
-        }
+        Serial.println("WARNING: No GameStateManager reference, deleting scroll");
+        // Don't add to player directly - just delete it
+        delete scroll;
     }
 }
 
 void TreasureRoomState::completeRoom() {
-    Serial.println("Treasure room completed - returning to door choice");
+    Serial.println("=== DEBUG: TreasureRoomState::completeRoom() START ===");
+    
+    // Direct approach: Just increment the dungeon progress (same as library fix)
+    if (dungeonManager) {
+        Serial.println("DEBUG: DungeonManager exists");
+        Floor* currentFloor = dungeonManager->getCurrentFloor();
+        if (currentFloor) {
+            Serial.println("DEBUG: Current floor exists");
+            Serial.println("DEBUG: Rooms completed BEFORE: " + String(currentFloor->getRoomsCompleted()));
+            
+            // Directly increment the room completion counter
+            currentFloor->incrementRoomsCompleted();
+            
+            Serial.println("DEBUG: Rooms completed AFTER: " + String(currentFloor->getRoomsCompleted()));
+            Serial.println("DEBUG: Treasure room completion - SUCCESS");
+        } else {
+            Serial.println("ERROR: No current floor found!");
+        }
+    } else {
+        Serial.println("ERROR: No dungeon manager found!");
+    }
+    
+    Serial.println("=== DEBUG: TreasureRoomState::completeRoom() END ===");
+    Serial.println("TREASURE ROOM COMPLETED WITH PROGRESS");
     requestStateChange(StateTransition::DOOR_CHOICE);
 }

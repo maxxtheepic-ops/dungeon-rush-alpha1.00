@@ -15,7 +15,7 @@ void MainMenu::activate() {
 
 void MainMenu::render() {
     if (!isActive) {
-        Serial.println("DEBUG: MainMenu::render() called but menu is not active");
+        // Only log this once, not constantly
         return;
     }
     
@@ -27,9 +27,8 @@ void MainMenu::render() {
         drawMenuOptions();
         lastRenderedSelection = selectedOption;
         needsRedraw = false;
-    } else {
-        Serial.println("DEBUG: MainMenu::render() - no redraw needed (selection: " + String(selectedOption) + ")");
     }
+    // REMOVED: The annoying "no redraw needed" debug message
 }
 
 void MainMenu::drawTitle() {
@@ -71,7 +70,7 @@ void MainMenu::drawMenuOptions() {
 
 MenuResult MainMenu::handleInput() {
     if (!isActive) {
-        Serial.println("DEBUG: MainMenu::handleInput() called but menu is not active");
+        // Only log this once, not constantly
         return MenuResult::NONE;
     }
     

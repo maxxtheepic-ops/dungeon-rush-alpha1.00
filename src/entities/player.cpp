@@ -64,6 +64,11 @@ Player::Player(String playerName) : Entity(playerName, WIZARD_START_HP, WIZARD_S
     
     // Initialize scroll inventory
     scrollInventory.clear();
+    Spell* startingScroll = SpellFactory::createSpell(1); // Fireball scroll
+    if (startingScroll) {
+        scrollInventory.push_back(startingScroll);
+        Serial.println("Player starts with scroll: " + startingScroll->getName());
+    }
     
     healthPotions = STARTING_POTIONS;
     manaPotions = 2;

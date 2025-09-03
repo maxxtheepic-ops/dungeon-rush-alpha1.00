@@ -1,3 +1,4 @@
+// src/game/GameStateManager.h
 #ifndef GAME_STATE_MANAGER_H
 #define GAME_STATE_MANAGER_H
 
@@ -13,6 +14,7 @@
 #include "../entities/player.h"
 #include "../entities/enemy.h"
 #include "../dungeon/DungeonManager.h"
+#include "../spells/spell.h"  // ADDED: Need this for SpellFactory
 #include <vector>
 
 // Forward declarations
@@ -76,7 +78,7 @@ public:
     std::vector<Spell*> getAvailableScrolls();  // Get all available scrolls
     void removeScroll(int index);               // Remove scroll by index
     void transferScrollsToLibrary();            // Transfer scrolls to library state
-    bool hasScrolls() const;                    // Check if any scrolls available
+    bool hasScrolls() const { return !availableScrolls.empty(); }  // ADDED: Check if any scrolls available
 };
 
 #endif

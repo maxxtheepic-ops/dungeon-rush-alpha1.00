@@ -10,8 +10,19 @@ GameStateManager::GameStateManager(Display* disp, Input* inp) {
     currentEnemy = new Enemy();
     dungeonManager = new DungeonManager(player);
     
-    // Initialize scroll inventory
+    // Initialize scroll inventory with a starting scroll for testing
     availableScrolls.clear();
+    
+    // ADDED: Give player a starting scroll for testing the library feature
+    Serial.println("DEBUG: Creating starting scroll...");
+    Spell* startingScroll = SpellFactory::createSpell(1); // Fireball scroll
+    if (startingScroll) {
+        availableScrolls.push_back(startingScroll);
+        Serial.println("DEBUG: Added starting scroll for testing: " + startingScroll->getName());
+        Serial.println("DEBUG: Total scrolls in GameStateManager: " + String(availableScrolls.size()));
+    } else {
+        Serial.println("ERROR: Failed to create starting scroll!");
+    }
     
     // Initialize states with GameStateManager reference
     mainMenuState = new MainMenuState(display, input);
@@ -59,6 +70,15 @@ void GameStateManager::initialize() {
     Serial.println("  libraryRoomState: " + String(libraryRoomState ? "OK" : "NULL"));  // CHANGED: Library instead of campfire
     Serial.println("  shopRoomState: " + String(shopRoomState ? "OK" : "NULL"));
     Serial.println("  treasureRoomState: " + String(treasureRoomState ? "OK" : "NULL"));
+    
+    // DEBUG: Check scroll inventory status
+    Serial.println("DEBUG: Initial scroll inventory check:");
+    Serial.println("DEBUG: Available scrolls: " + String(availableScrolls.size()));
+    for (Spell* scroll : availableScrolls) {
+        if (scroll) {
+            Serial.println("DEBUG: - " + scroll->getName());
+        }
+    }
     
     // Enter initial state
     if (currentState) {
@@ -137,6 +157,12 @@ void GameStateManager::changeState(StateTransition newState) {
                 currentState = mainMenuState;
                 break;
             }
+            // DEBUG: Show scroll count before transfer
+            Serial.println("DEBUG: Available scrolls before transfer: " + String(availableScrolls.size()));
+            for (Spell* scroll : availableScrolls) {
+                if (scroll) Serial.println("DEBUG: - " + scroll->getName());
+            }
+            
             // Transfer scrolls to library before entering
             transferScrollsToLibrary();
             currentState = libraryRoomState;
@@ -345,7 +371,7 @@ void GameStateManager::removeScroll(int index) {
 }
 
 void GameStateManager::transferScrollsToLibrary() {
-    if (libraryRoomState && !availableScrolls.empty()) {
+    if (libraryRoomState) {
         Serial.println("GameStateManager: Transferring " + String(availableScrolls.size()) + " scrolls to library");
         
         // Transfer each scroll to the library
@@ -359,8 +385,8 @@ void GameStateManager::transferScrollsToLibrary() {
         // Clear the global list (scrolls are now owned by library)
         availableScrolls.clear();
         Serial.println("Global scroll inventory cleared after transfer");
-    } else if (availableScrolls.empty()) {
-        Serial.println("GameStateManager: No scrolls to transfer to library");
+    } else {
+        Serial.println("GameStateManager: No library state available for scroll transfer");
     }
 }
 

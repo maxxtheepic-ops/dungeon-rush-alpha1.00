@@ -14,6 +14,7 @@ GameStateManager gameState(&display, &input);
 void setup() {
     Serial.begin(115200);
     delay(2000);
+    Serial.println("=== STARTING GAME INITIALIZATION ===");  // ADD THIS
     
     // Initialize hardware
     display.init();

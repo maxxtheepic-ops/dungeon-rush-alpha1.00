@@ -1,3 +1,4 @@
+// src/rooms/LibraryRoomState.h
 #ifndef LIBRARY_ROOM_STATE_H
 #define LIBRARY_ROOM_STATE_H
 
@@ -73,7 +74,7 @@ private:
     void performRest();
     void openScrolls();
     void openSpellManagement();
-    void learnSelectedSpell();
+    void readSelectedScroll();     // CHANGED: Renamed from learnSelectedSpell
     void equipSpellToSlot();
     void showSpellLearned(Spell* spell);
     void returnToMainMenu();
@@ -102,4 +103,4 @@ public:
     void setGameStateManager(GameStateManager* gsm) { gameStateManager = gsm; }
 };
 
-#endif // LIBRARY_ROOM_STATE_H
+#endif // LIBRARY_ROOM_STATE_H 

@@ -1,3 +1,4 @@
+// src/rooms/TreasureRoomState.h
 #ifndef TREASURE_ROOM_STATE_H
 #define TREASURE_ROOM_STATE_H
 
@@ -30,9 +31,9 @@ private:
     int lastSelectedOption;
     bool treasureLooted;
     
-    // Drawing methods
+    // Drawing methods - UPDATED: Only show scroll result
     void drawTreasureScreen();
-    void showTreasureResult(Spell* foundScroll, int gold, int manaPotions);
+    void showTreasureResult(Spell* foundScroll);  // CHANGED: Only scroll parameter
     
     // Input handling
     void handleTreasureInput();
