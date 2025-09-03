@@ -34,14 +34,15 @@ bool TurnQueue::doesPlayerGoFirst() const {
     return playerGoesFirst;
 }
 
-// Get priority for player actions
+// Get priority for player actions - UPDATED for spell actions
 ActionPriority TurnQueue::getActionPriority(PlayerAction action) {
     switch(action) {
         case ACTION_DEFEND:
             return PRIORITY_DEFEND;
-        case ACTION_USE_ITEM:
-            return PRIORITY_ITEM;
-        case ACTION_ATTACK:
+        case ACTION_CAST_SPELL_1:  // All spells have attack priority
+        case ACTION_CAST_SPELL_2:
+        case ACTION_CAST_SPELL_3:
+        case ACTION_CAST_SPELL_4:
             return PRIORITY_ATTACK;
         default:
             return PRIORITY_ATTACK;

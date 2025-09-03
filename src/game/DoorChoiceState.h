@@ -10,8 +10,8 @@ private:
     
     // Door choice data
     std::vector<DoorChoice> availableChoices;
-    int selectedOption;  // 0=left door, 1=right door, 2=campfire
-    int maxOptions;      // Will be 3 (left, right, campfire)
+    int selectedOption;  // 0=left door, 1=right door, 2=library
+    int maxOptions;      // Will be 3 (left, right, library)
     bool screenDrawn;
     int lastSelectedOption;
     
@@ -22,10 +22,10 @@ private:
     // Helper methods
     void generateDoorChoices();
     void drawDoor(int doorIndex, int x, int y, int width, int height, bool selected);
-    void drawCampfire(int x, int y, int width, int height, bool selected);
+    void drawLibrary(int x, int y, int width, int height, bool selected);  // Add this declaration
     String getDoorIconText(DoorIcon icon);
     void drawFloorProgress();
-    void drawProgressBar(int x, int y, int width, int height, int current, int max);  // NEW: progress bar
+    void drawProgressBar(int x, int y, int width, int height, int current, int max);
     
 public:
     DoorChoiceState(Display* disp, Input* inp, DungeonManager* dm);

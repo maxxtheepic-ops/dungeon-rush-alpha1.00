@@ -1,7 +1,7 @@
 #include "CombatState.h"
 
 CombatGameState::CombatGameState(Display* disp, Input* inp, Player* p, Enemy* e, DungeonManager* dm) : GameState(disp, inp) {
-    combatMenu = new CombatMenu(display, input);
+    spellCombatMenu = new SpellCombatMenu(display, input, p);  // CHANGED: Use spell combat menu
     combatManager = new CombatManager();
     combatHUD = new CombatHUD(display);
     
@@ -12,7 +12,7 @@ CombatGameState::CombatGameState(Display* disp, Input* inp, Player* p, Enemy* e,
 }
 
 CombatGameState::~CombatGameState() {
-    delete combatMenu;
+    delete spellCombatMenu;
     delete combatManager;
     delete combatHUD;
 }
@@ -23,14 +23,14 @@ void CombatGameState::enter() {
 }
 
 void CombatGameState::update() {
-    if (combatMenu->getIsActive()) {
+    if (spellCombatMenu->getIsActive()) {
         handleCombatInput();
     }
 }
 
 void CombatGameState::exit() {
     Serial.println("Exiting Combat State");
-    combatMenu->deactivate();
+    spellCombatMenu->deactivate();
     combatManager->endCombat();
 }
 
@@ -52,32 +52,38 @@ void CombatGameState::startNewCombat() {
     // Draw initial combat screen
     combatHUD->drawFullCombatScreen(player, currentEnemy, combatManager->getTurnCounter());
     
-    // Activate combat menu
-    combatMenu->activate();
-    combatMenu->render();
+    // Activate spell combat menu
+    spellCombatMenu->activate();
+    spellCombatMenu->render();
     
     Serial.println("=== COMBAT STARTED ===");
     combatManager->printCombatStatus();
 }
 
 void CombatGameState::handleCombatInput() {
-    MenuResult result = combatMenu->handleInput();
-    combatMenu->render();
+    MenuResult result = spellCombatMenu->handleInput();
+    spellCombatMenu->render();
     
     if (result == MenuResult::SELECTED) {
         // Convert menu selection to PlayerAction
-        CombatAction menuAction = combatMenu->getSelectedAction();
+        SpellCombatAction menuAction = spellCombatMenu->getSelectedAction();
         PlayerAction playerAction;
         
         switch (menuAction) {
-            case CombatAction::ATTACK:
-                playerAction = ACTION_ATTACK;
+            case SpellCombatAction::CAST_SPELL_1:
+                playerAction = ACTION_CAST_SPELL_1;
                 break;
-            case CombatAction::DEFEND:
+            case SpellCombatAction::CAST_SPELL_2:
+                playerAction = ACTION_CAST_SPELL_2;
+                break;
+            case SpellCombatAction::CAST_SPELL_3:
+                playerAction = ACTION_CAST_SPELL_3;
+                break;
+            case SpellCombatAction::CAST_SPELL_4:
+                playerAction = ACTION_CAST_SPELL_4;
+                break;
+            case SpellCombatAction::DEFEND:
                 playerAction = ACTION_DEFEND;
-                break;
-            case CombatAction::ITEM:
-                playerAction = ACTION_USE_ITEM;
                 break;
         }
         
@@ -94,18 +100,25 @@ void CombatGameState::handleCombatInput() {
                 
                 // Mark room as completed and advance dungeon
                 dungeonManager->markRoomCompleted();
-                Serial.println("Room completed! Returning to door choice...");
+                Serial.println("Room completed!");
                 
-                // Return to door choice instead of game over
-                requestStateChange(StateTransition::DOOR_CHOICE);
+                // Check if this was a boss room - go to library after boss
+                Room* currentRoom = dungeonManager->getCurrentFloor()->getCurrentRoom();
+                if (currentRoom && currentRoom->getType() == ROOM_BOSS) {
+                    Serial.println("Boss defeated! Going to library...");
+                    requestStateChange(StateTransition::LIBRARY);
+                } else {
+                    Serial.println("Returning to door choice...");
+                    requestStateChange(StateTransition::DOOR_CHOICE);
+                }
             } else {
                 combatHUD->drawDefeatScreen();
                 requestStateChange(StateTransition::GAME_OVER);
             }
         } else {
             // Combat continues
-            combatMenu->activate();
-            combatMenu->render();
+            spellCombatMenu->activate();
+            spellCombatMenu->render();
         }
     }
 }

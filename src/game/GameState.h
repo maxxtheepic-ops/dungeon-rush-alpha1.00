@@ -9,9 +9,9 @@ enum class StateTransition {
     MAIN_MENU,
     DOOR_CHOICE,
     COMBAT,
-    CAMPFIRE,
-    SHOP,          // NEW: Shop room transition
-    TREASURE,      // NEW: Treasure room transition
+    LIBRARY,       // CHANGED: Library replaces campfire
+    SHOP,
+    TREASURE,
     GAME_OVER,
     SETTINGS,
     CREDITS,

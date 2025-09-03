@@ -7,7 +7,7 @@
 #include "MainMenuState.h"
 #include "DoorChoiceState.h"
 #include "../rooms/CombatRoomState.h"
-#include "../rooms/CampfireRoomState.h"
+#include "../rooms/LibraryRoomState.h"      // CHANGED: Library replaces CampfireRoomState
 #include "../rooms/ShopRoomState.h"
 #include "../rooms/TreasureRoomState.h"
 #include "../entities/player.h"
@@ -30,9 +30,9 @@ private:
     MainMenuState* mainMenuState;
     DoorChoiceState* doorChoiceState;
     CombatRoomState* combatRoomState;
-    CampfireRoomState* campfireRoomState;
-    ShopRoomState* shopRoomState;          // NEW: Shop room state
-    TreasureRoomState* treasureRoomState;  // NEW: Treasure room state
+    LibraryRoomState* libraryRoomState;    // CHANGED: Library replaces campfire
+    ShopRoomState* shopRoomState;
+    TreasureRoomState* treasureRoomState;
     
     // Game over handling
     bool handlingGameOver;  // tracks if we're in game over mode

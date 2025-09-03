@@ -2,7 +2,7 @@
 #define COMBAT_GAME_STATE_H
 
 #include "GameState.h"
-#include "../menus/CombatMenu.h"
+#include "../menus/SpellCombatMenu.h"
 #include "../combat/combat_manager.h"
 #include "../combat/CombatHUD.h"
 #include "../entities/player.h"
@@ -11,7 +11,7 @@
 
 class CombatGameState : public GameState {
 private:
-    CombatMenu* combatMenu;
+    SpellCombatMenu* spellCombatMenu;    // CHANGED: Use spell combat menu
     CombatManager* combatManager;
     CombatHUD* combatHUD;
     

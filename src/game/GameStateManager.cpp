@@ -13,7 +13,7 @@ GameStateManager::GameStateManager(Display* disp, Input* inp) {
     mainMenuState = new MainMenuState(display, input);
     doorChoiceState = new DoorChoiceState(display, input, dungeonManager);
     combatRoomState = new CombatRoomState(display, input, player, currentEnemy, dungeonManager);
-    campfireRoomState = new CampfireRoomState(display, input, player, currentEnemy, dungeonManager);
+    libraryRoomState = new LibraryRoomState(display, input, player, currentEnemy, dungeonManager);  // CHANGED: Library replaces campfire
     shopRoomState = new ShopRoomState(display, input, player, currentEnemy, dungeonManager);
     treasureRoomState = new TreasureRoomState(display, input, player, currentEnemy, dungeonManager);
     
@@ -29,13 +29,13 @@ GameStateManager::~GameStateManager() {
     delete mainMenuState;
     delete doorChoiceState;
     delete combatRoomState;
-    delete campfireRoomState;
+    delete libraryRoomState;  // CHANGED: Delete library instead of campfire
     delete shopRoomState;
     delete treasureRoomState;
 }
 
 void GameStateManager::initialize() {
-    Serial.println("=== ESP32 Dungeon Crawler ===");
+    Serial.println("=== ESP32 Wizard Dungeon Crawler ===");  // CHANGED: Updated title
     Serial.println("Game State Manager Initialized");
     
     // Check if all states are properly initialized
@@ -43,7 +43,7 @@ void GameStateManager::initialize() {
     Serial.println("  mainMenuState: " + String(mainMenuState ? "OK" : "NULL"));
     Serial.println("  doorChoiceState: " + String(doorChoiceState ? "OK" : "NULL"));
     Serial.println("  combatRoomState: " + String(combatRoomState ? "OK" : "NULL"));
-    Serial.println("  campfireRoomState: " + String(campfireRoomState ? "OK" : "NULL"));
+    Serial.println("  libraryRoomState: " + String(libraryRoomState ? "OK" : "NULL"));  // CHANGED: Library instead of campfire
     Serial.println("  shopRoomState: " + String(shopRoomState ? "OK" : "NULL"));
     Serial.println("  treasureRoomState: " + String(treasureRoomState ? "OK" : "NULL"));
     
@@ -74,7 +74,7 @@ void GameStateManager::update() {
         if (currentState == mainMenuState) currentStateName = "MainMenu";
         else if (currentState == doorChoiceState) currentStateName = "DoorChoice";
         else if (currentState == combatRoomState) currentStateName = "Combat";
-        else if (currentState == campfireRoomState) currentStateName = "Campfire";
+        else if (currentState == libraryRoomState) currentStateName = "Library";  // CHANGED: Library instead of campfire
         else if (currentState == shopRoomState) currentStateName = "Shop";
         else if (currentState == treasureRoomState) currentStateName = "Treasure";
         
@@ -117,15 +117,15 @@ void GameStateManager::changeState(StateTransition newState) {
             currentState = combatRoomState;
             break;
             
-        case StateTransition::CAMPFIRE:
-            Serial.println("DEBUG: Switching to Campfire - START");
-            if (!campfireRoomState) {
-                Serial.println("ERROR: campfireRoomState is NULL!");
+        case StateTransition::LIBRARY:  // CHANGED: Library instead of campfire
+            Serial.println("DEBUG: Switching to Library - START");
+            if (!libraryRoomState) {
+                Serial.println("ERROR: libraryRoomState is NULL!");
                 currentState = mainMenuState;
                 break;
             }
-            currentState = campfireRoomState;
-            Serial.println("DEBUG: Switching to Campfire - ASSIGNED");
+            currentState = libraryRoomState;
+            Serial.println("DEBUG: Switching to Library - ASSIGNED");
             break;
             
         case StateTransition::SHOP:
@@ -179,12 +179,12 @@ void GameStateManager::showGameOverScreen() {
     // Large game over text
     display->drawText("GAME OVER", 30, 60, TFT_RED, 2);
     
-    // Explain what happens
-    display->drawText("You have fallen in", 10, 100, TFT_WHITE);
-    display->drawText("the dungeon...", 20, 115, TFT_WHITE);
+    // Explain what happens (wizard theme)
+    display->drawText("Your magic failed", 20, 100, TFT_WHITE);
+    display->drawText("in the dungeon...", 20, 115, TFT_WHITE);
     
     display->drawText("All progress lost!", 15, 140, TFT_YELLOW);
-    display->drawText("Equipment lost!", 20, 155, TFT_YELLOW);
+    display->drawText("Spells forgotten!", 20, 155, TFT_PURPLE);  // CHANGED: Spells instead of equipment
     
     // Instructions
     display->drawText("Press any button", 10, 180, TFT_CYAN);
@@ -192,7 +192,7 @@ void GameStateManager::showGameOverScreen() {
     
     Serial.println("DEBUG: Game over screen drawn");
     Serial.println("=== GAME OVER ===");
-    Serial.println("Player died - all progress will be reset");
+    Serial.println("Wizard died - all progress will be reset");
 }
 
 void GameStateManager::handleGameOverScreen() {
@@ -214,7 +214,7 @@ void GameStateManager::handleGameOverScreen() {
         if (mainMenuState) mainMenuState->clearTransition();
         if (doorChoiceState) doorChoiceState->clearTransition();
         if (combatRoomState) combatRoomState->clearTransition();
-        if (campfireRoomState) campfireRoomState->clearTransition();
+        if (libraryRoomState) libraryRoomState->clearTransition();  // CHANGED: Library instead of campfire
         if (shopRoomState) shopRoomState->clearTransition();
         if (treasureRoomState) treasureRoomState->clearTransition();
         
@@ -257,8 +257,9 @@ void GameStateManager::handlePlaceholderState(StateTransition state) {
             
         case StateTransition::CREDITS:
             display->drawText("Credits", 50, 80, TFT_WHITE, 2);
-            display->drawText("Made with ESP32", 20, 120, TFT_GREEN);
-            display->drawText("& TFT_eSPI", 35, 140, TFT_GREEN);
+            display->drawText("Wizard Dungeon", 20, 120, TFT_PURPLE);  // CHANGED: Updated credits
+            display->drawText("Crawler v0.2", 30, 135, TFT_PURPLE);
+            display->drawText("Made with ESP32", 20, 150, TFT_GREEN);
             display->drawText("Press A to return", 10, 180, TFT_CYAN);
             
             if (input->wasPressed(Button::A)) {
@@ -273,10 +274,12 @@ void GameStateManager::handlePlaceholderState(StateTransition state) {
 }
 
 void GameStateManager::resetPlayer() {
-    // Only reset health and potions, keep equipment/progress
+    // Only reset health and mana, keep spells/progress
     player->heal(player->getMaxHP());
+    player->restoreAllMana();  // CHANGED: Also restore mana
     player->addHealthPotions(3);
-    Serial.println("Player health restored");
+    player->addManaPotions(2);  // CHANGED: Also give mana potions
+    Serial.println("Player health and mana restored");
 }
 
 void GameStateManager::resetDungeonProgress() {
@@ -288,13 +291,15 @@ void GameStateManager::resetDungeonProgress() {
 void GameStateManager::fullGameReset() {
     Serial.println("DEBUG: Starting full game reset");
     
-    // Reset player to base stats (lose all equipment/progress)
+    // Reset player to base wizard stats (lose all equipment/progress)
     player->resetToBaseStats();
     player->heal(player->getMaxHP());
+    player->restoreAllMana();  // CHANGED: Also restore mana
     player->addHealthPotions(3);
+    player->addManaPotions(2);  // CHANGED: Also give mana potions
     
     // Reset dungeon progress
     resetDungeonProgress();
     
-    Serial.println("DEBUG: Full game reset complete - fresh start!");
+    Serial.println("DEBUG: Full game reset complete - fresh wizard start!");
 }

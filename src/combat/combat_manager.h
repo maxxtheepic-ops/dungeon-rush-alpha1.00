@@ -34,6 +34,9 @@ private:
     EnemyAction enemyAction;
     bool actionsChosen;
     
+    // Helper methods
+    String getPlayerActionName(PlayerAction action);  // Add this declaration
+    
 public:
     // Constructor
     CombatManager();

@@ -27,14 +27,14 @@ void CombatHUD::clearSpriteArea() {
 }
 
 void CombatHUD::clearCombatArea() {
-    display->fillRect(0, 0, Display::WIDTH, 240, TFT_BLACK);
+    display->fillRect(0, 0, Display::WIDTH, 200, TFT_BLACK);  // Adjusted for spell menu
 }
 
 void CombatHUD::drawPlayerInfo(Player* player) {
     int y = INFO_START_Y;
     
-    // Player name in green
-    display->drawText("HERO", PLAYER_INFO_X, y, TFT_GREEN);
+    // Player name in purple (wizard theme)
+    display->drawText("WIZARD", PLAYER_INFO_X, y, TFT_PURPLE);
     y += LINE_HEIGHT;
     
     // Health with color coding
@@ -43,15 +43,28 @@ void CombatHUD::drawPlayerInfo(Player* player) {
     display->drawText(hpText.c_str(), PLAYER_INFO_X, y, hpColor);
     y += LINE_HEIGHT;
     
-    // Attack stat
-    display->drawText(("ATK: " + String(player->getAttack())).c_str(), 
-                     PLAYER_INFO_X, y, TFT_WHITE);
+    // Mana (NEW for wizard)
+    String manaText = "MP: " + String(player->getCurrentMana()) + "/" + String(player->getMaxMana());
+    uint16_t manaColor = (player->getCurrentMana() < player->getMaxMana() / 4) ? TFT_RED : TFT_BLUE;
+    display->drawText(manaText.c_str(), PLAYER_INFO_X, y, manaColor);
     y += LINE_HEIGHT;
     
-    // Defense stat (show total defense including temporary)
+    // Show magical defense (show total defense including shields)
     String defText = "DEF: " + String(player->getTotalDefense());
     uint16_t defColor = player->getIsDefending() ? TFT_BLUE : TFT_WHITE;
+    if (player->getShieldValue() > 0) {
+        defColor = TFT_CYAN; // Show shields in cyan
+        defText += " (+" + String(player->getShieldValue()) + " shield)";
+    }
     display->drawText(defText.c_str(), PLAYER_INFO_X, y, defColor);
+    y += LINE_HEIGHT;
+    
+    // Show active spell effects count
+    auto activeEffects = player->getActiveEffects();
+    if (!activeEffects.empty()) {
+        display->drawText(("Effects: " + String(activeEffects.size())).c_str(), 
+                         PLAYER_INFO_X, y, TFT_PURPLE);
+    }
 }
 
 void CombatHUD::drawEnemyInfo(Enemy* enemy) {
@@ -76,6 +89,18 @@ void CombatHUD::drawEnemyInfo(Enemy* enemy) {
     String defText = "DEF: " + String(enemy->getTotalDefense());
     uint16_t defColor = enemy->getIsDefending() ? TFT_BLUE : TFT_WHITE;
     display->drawText(defText.c_str(), ENEMY_INFO_X, y, defColor);
+    y += LINE_HEIGHT;
+    
+    // Show AI type
+    String aiText = "AI: ";
+    switch(enemy->getAIType()) {
+        case AI_AGGRESSIVE: aiText += "Aggressive"; break;
+        case AI_DEFENSIVE: aiText += "Defensive"; break;
+        case AI_BERSERKER: aiText += "Berserker"; break;
+        case AI_BALANCED: 
+        default: aiText += "Balanced"; break;
+    }
+    display->drawText(aiText.c_str(), ENEMY_INFO_X, y, TFT_GRAY);
 }
 
 void CombatHUD::drawTurnInfo(int turnCounter) {
@@ -86,13 +111,18 @@ void CombatHUD::drawTurnInfo(int turnCounter) {
 
 void CombatHUD::drawInventoryInfo(Player* player) {
     // Show potions in cyan
-    String potionText = "Potions: " + String(player->getHealthPotions());
+    String potionText = "HP Potions: " + String(player->getHealthPotions());
     uint16_t potionColor = (player->getHealthPotions() == 0) ? TFT_RED : TFT_CYAN;
     display->drawText(potionText.c_str(), PLAYER_INFO_X, 120, potionColor);
     
-    // Show gold (for future shop integration)
+    // Show mana potions (NEW)
+    String manaPotionText = "MP Potions: " + String(player->getManaPotions());
+    uint16_t manaPotionColor = (player->getManaPotions() == 0) ? TFT_RED : TFT_BLUE;
+    display->drawText(manaPotionText.c_str(), PLAYER_INFO_X, 135, manaPotionColor);
+    
+    // Show gold
     display->drawText(("Gold: " + String(player->getGold())).c_str(), 
-                     PLAYER_INFO_X, 135, TFT_YELLOW);
+                     PLAYER_INFO_X, 150, TFT_YELLOW);
 }
 
 void CombatHUD::drawVictoryScreen() {
@@ -101,16 +131,17 @@ void CombatHUD::drawVictoryScreen() {
     // Large victory text
     display->drawText("VICTORY!", 40, 60, TFT_GREEN, 2);
     
-    // Show that progress continues
-    display->drawText("Enemy defeated!", 20, 100, TFT_WHITE);
-    display->drawText("Progress saved", 25, 115, TFT_CYAN);
+    // Show magical triumph
+    display->drawText("Enemy vanquished", 20, 100, TFT_WHITE);
+    display->drawText("by your magic!", 25, 115, TFT_PURPLE);
     
     // Instructions
     display->drawText("Press any button", 10, 140, TFT_YELLOW);
     display->drawText("to continue", 35, 155, TFT_YELLOW);
     
-    // Optional: Add victory effects or stats here later
-    display->drawText("Onward!", 60, 180, TFT_GREEN);
+    // Magical flourish
+    display->drawText("* Arcane power *", 15, 180, TFT_CYAN);
+    display->drawText("* grows stronger *", 10, 195, TFT_CYAN);
 }
 
 void CombatHUD::drawDefeatScreen() {
@@ -120,11 +151,11 @@ void CombatHUD::drawDefeatScreen() {
     display->drawText("DEFEAT!", 50, 60, TFT_RED, 2);
     
     // Explain what happens
-    display->drawText("You have fallen in", 10, 100, TFT_WHITE);
-    display->drawText("the dungeon...", 20, 115, TFT_WHITE);
+    display->drawText("Your magic failed", 20, 100, TFT_WHITE);
+    display->drawText("in the dungeon...", 20, 115, TFT_WHITE);
     
     display->drawText("All progress lost!", 15, 140, TFT_YELLOW);
-    display->drawText("Equipment lost!", 20, 155, TFT_YELLOW);
+    display->drawText("Spells forgotten!", 20, 155, TFT_PURPLE);
     
     // Instructions
     display->drawText("Press any button", 10, 180, TFT_CYAN);
@@ -134,8 +165,8 @@ void CombatHUD::drawDefeatScreen() {
 void CombatHUD::drawNewCombatPrompt() {
     clearCombatArea();
     
-    display->drawText("Ready for", 30, 80, TFT_WHITE, 2);
-    display->drawText("Adventure?", 25, 100, TFT_WHITE, 2);
+    display->drawText("Ready your", 30, 80, TFT_WHITE, 2);
+    display->drawText("Spells?", 45, 100, TFT_PURPLE, 2);
     
     display->drawText("Press any button", 10, 140, TFT_YELLOW);
     display->drawText("to start combat", 10, 155, TFT_YELLOW);

@@ -58,6 +58,11 @@
 #define COLOR_DARK_GRAY     0x4208
 #define COLOR_LIGHT_GRAY    0xC618
 
+// Additional colors not defined in TFT_eSPI
+#ifndef TFT_GRAY
+#define TFT_GRAY            0x8410
+#endif
+
 // UI Colors
 #define COLOR_BACKGROUND    COLOR_BLACK
 #define COLOR_TEXT          COLOR_WHITE
@@ -77,14 +82,31 @@
 #define INPUT_REPEAT_DELAY_MS   150
 
 // ==============================================
-// GAME BALANCE CONSTANTS
+// WIZARD GAME BALANCE CONSTANTS
 // ==============================================
 
-// Player starting stats
-#define PLAYER_START_HP     50
-#define PLAYER_START_ATK    12
-#define PLAYER_START_DEF    8
-#define PLAYER_START_SPD    10
+// Wizard starting stats
+#define WIZARD_START_HP     40      // Lower HP than warrior
+#define WIZARD_START_ATK    8       // Lower physical attack
+#define WIZARD_START_DEF    6       // Lower defense  
+#define WIZARD_START_SPD    12      // Higher speed
+#define WIZARD_START_MANA   50      // Starting mana
+
+// Legacy player constants (for compatibility)
+#define PLAYER_START_HP     WIZARD_START_HP
+#define PLAYER_START_ATK    WIZARD_START_ATK
+#define PLAYER_START_DEF    WIZARD_START_DEF
+#define PLAYER_START_SPD    WIZARD_START_SPD
+
+// Mana system
+#define MANA_REGEN_PER_TURN 1       // Natural mana regeneration
+#define MANA_POTION_RESTORE 25      // Mana restored by potion
+#define MANA_POTION_COST    20      // Cost of mana potion
+
+// Spell costs (base values, individual spells can override)
+#define BASIC_SPELL_COST    5       // Tier 1 spells
+#define MEDIUM_SPELL_COST   8       // Tier 2 spells  
+#define ADVANCED_SPELL_COST 12      // Tier 3 spells
 
 // Dungeon progression
 #define ROOMS_PER_FLOOR     10      // Rooms before boss becomes available
@@ -92,13 +114,13 @@
 
 // Item constants
 #define STARTING_POTIONS    3
-#define STARTING_GOLD       100  // Increased so player can afford to rest
+#define STARTING_GOLD       100     // Starting gold
 #define POTION_HEAL_AMOUNT  30
 #define HEALTH_POTION_COST  25
 #define MIN_DAMAGE          1
 
-// Campfire costs
-#define CAMPFIRE_REST_COST  20      // Gold cost to rest at campfire
+// Library costs (replaces campfire)
+#define LIBRARY_REST_COST   20      // Gold cost to rest at library
 
 // Enemy stats - Goblin (fast, weak)
 #define GOBLIN_HP           25
@@ -118,27 +140,26 @@
 #define ORC_DEF             8
 #define ORC_SPD             6
 
-// New enemy stats - Troll
+// Enemy stats - Troll (very strong boss-tier)
 #define TROLL_HP            100
-#define TROLL_ATK           20  
+#define TROLL_ATK           20
 #define TROLL_DEF           12
 #define TROLL_SPD           4
 
-// New enemy stats - Dragon
+// Enemy stats - Dragon (ultimate boss)
 #define DRAGON_HP           150
-#define DRAGON_ATK          30
-#define DRAGON_DEF          18
-#define DRAGON_SPD          6 
-
-// New enemy stats - Bandit
-#define BANDIT_HP           35
-#define BANDIT_ATK          12
-#define BANDIT_DEF          5
-#define BANDIT_SPD          10
+#define DRAGON_ATK          25
+#define DRAGON_DEF          15
+#define DRAGON_SPD          8
 
 // Combat constants
 #define MAX_COMBAT_TURNS    20
 #define DEFEND_BONUS_MULTIPLIER 1.5
+
+// Spell synergy system
+#define SPELL_SYNERGY_BONUS 5       // Bonus damage for spell synergies
+#define SHIELD_DECAY_RATE   1       // How fast magical shields decay
+#define MAX_SPELL_EFFECTS   10      // Maximum active spell effects
 
 // ==============================================
 // UI LAYOUT CONSTANTS
@@ -146,8 +167,8 @@
 
 // Combat layout - optimized for your 170x320 display
 #define COMBAT_SPRITE_AREA_HEIGHT   200     // Top area for player/enemy sprites
-#define COMBAT_MENU_AREA_HEIGHT     70      // Bottom area for menu
-#define COMBAT_MENU_Y_START         250     // Where menu starts
+#define COMBAT_MENU_AREA_HEIGHT     120     // Bottom area for spell menu (increased)
+#define COMBAT_MENU_Y_START         200     // Where menu starts (adjusted)
 
 // Menu layout
 #define MENU_ITEM_HEIGHT    20
@@ -172,7 +193,7 @@
 #define MAX_INVENTORY_SLOTS     15
 
 // Version info
-#define GAME_VERSION        "0.1.0"
-#define GAME_TITLE          "ESP32 Dungeon Crawler"
+#define GAME_VERSION        "0.2.0"
+#define GAME_TITLE          "ESP32 Wizard Dungeon Crawler"
 
 #endif

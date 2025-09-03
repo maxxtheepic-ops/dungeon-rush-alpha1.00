@@ -4,7 +4,7 @@
 DoorChoiceState::DoorChoiceState(Display* disp, Input* inp, DungeonManager* dm) : GameState(disp, inp) {
     dungeonManager = dm;
     selectedOption = 0;
-    maxOptions = 3;  // Left door, right door, campfire
+    maxOptions = 3;  // Left door, right door, library
     screenDrawn = false;
     lastSelectedOption = -1;
 }
@@ -56,7 +56,7 @@ void DoorChoiceState::drawScreen() {
     // Header
     display->drawText("Choose Your Path", 30, 15, TFT_CYAN, 2);
     
-    // Layout: Two doors side by side, campfire below center
+    // Layout: Two doors side by side, library below center
     int doorWidth = 60;
     int doorHeight = 80;
     int doorSpacing = 20;
@@ -64,20 +64,20 @@ void DoorChoiceState::drawScreen() {
     int rightDoorX = (170/2) + (doorSpacing/2);
     int doorY = 50; // Moved up slightly to make room at bottom
     
-    // Campfire position (centered below doors)
-    int campfireWidth = 80;
-    int campfireHeight = 50;
-    int campfireX = (170 - campfireWidth) / 2;
-    int campfireY = doorY + doorHeight + 15; // Reduced spacing
+    // Library position (centered below doors)
+    int libraryWidth = 80;
+    int libraryHeight = 50;
+    int libraryX = (170 - libraryWidth) / 2;
+    int libraryY = doorY + doorHeight + 15; // Reduced spacing
     
     // Draw doors
     drawDoor(0, leftDoorX, doorY, doorWidth, doorHeight, selectedOption == 0);
     drawDoor(1, rightDoorX, doorY, doorWidth, doorHeight, selectedOption == 1);
     
-    // Draw campfire
-    drawCampfire(campfireX, campfireY, campfireWidth, campfireHeight, selectedOption == 2);
+    // Draw library
+    drawLibrary(libraryX, libraryY, libraryWidth, libraryHeight, selectedOption == 2);
     
-    // Draw floor progress at the bottom (NEW LOCATION)
+    // Draw floor progress at the bottom
     drawFloorProgress();
     
     // Controls at very bottom
@@ -189,7 +189,7 @@ void DoorChoiceState::handleInput() {
     if (input->wasPressed(Button::UP)) {
         selectedOption--;
         if (selectedOption < 0) {
-            selectedOption = maxOptions - 1;  // Wrap to bottom (campfire)
+            selectedOption = maxOptions - 1;  // Wrap to bottom (library)
         }
     }
     
@@ -265,10 +265,10 @@ void DoorChoiceState::handleInput() {
                 Serial.println("ERROR: Failed to select right door room");
             }
         } else if (selectedOption == 2) {
-            // Campfire - go to campfire room state
-            Serial.println("DEBUG: Selected CAMPFIRE - about to request state change");
-            Serial.println("DEBUG: Current state before transition: " + String((int)StateTransition::CAMPFIRE));
-            requestStateChange(StateTransition::CAMPFIRE);
+            // Library - go to library room state
+            Serial.println("DEBUG: Selected LIBRARY - about to request state change");
+            Serial.println("DEBUG: Current state before transition: " + String((int)StateTransition::LIBRARY));
+            requestStateChange(StateTransition::LIBRARY);
             Serial.println("DEBUG: State change requested successfully");
         }
     }
@@ -279,23 +279,23 @@ void DoorChoiceState::handleInput() {
     }
 }
 
-void DoorChoiceState::drawCampfire(int x, int y, int width, int height, bool selected) {
-    // Campfire border
+void DoorChoiceState::drawLibrary(int x, int y, int width, int height, bool selected) {
+    // Library border
     uint16_t borderColor = selected ? TFT_YELLOW : TFT_WHITE;
     uint16_t bgColor = selected ? TFT_BLUE : TFT_BLACK;
     
-    // Draw campfire frame
+    // Draw library frame
     display->drawRect(x, y, width, height, borderColor);
     display->fillRect(x+1, y+1, width-2, height-2, bgColor);
     
-    // Campfire icon (centered)
-    display->drawText("[*]", x + width/2 - 8, y + 8, TFT_RED, 2);
+    // Library icon (magical book)
+    display->drawText("[*]", x + width/2 - 8, y + 8, TFT_PURPLE, 2);
     
     // Label
-    display->drawText("CAMPFIRE", x + 10, y + 25, TFT_WHITE);
+    display->drawText("LIBRARY", x + 15, y + 25, TFT_WHITE);
     
     // Description
-    display->drawText("Rest & Recover", x + 5, y + 35, TFT_CYAN, 1);
+    display->drawText("Learn & Rest", x + 8, y + 35, TFT_CYAN, 1);
     
     // Selection indicator
     if (selected) {

@@ -2,6 +2,7 @@
 #include "damage_calculator.h"
 #include "turn_queue.h"
 #include "../utils/constants.h"
+#include "../spells/spell.h"  // Include spell.h to get SpellLibrary definition
 
 // Constructor
 CombatManager::CombatManager() {
@@ -10,7 +11,7 @@ CombatManager::CombatManager() {
     currentState = COMBAT_CHOOSE_ACTIONS;
     turnCounter = 0;
     actionsChosen = false;
-    playerAction = ACTION_ATTACK;
+    playerAction = ACTION_CAST_SPELL_1;  // CHANGED: Default to spell casting
     enemyAction = ENEMY_ATTACK;
 }
 
@@ -26,6 +27,9 @@ void CombatManager::startCombat(Player* p, Enemy* e) {
     player->resetDefense();
     currentEnemy->resetDefense();
     
+    // Clear spell library recent casts for fresh combat
+    player->getSpellLibrary()->clearRecentCasts();
+    
     Serial.println("Combat begins! " + player->getName() + " vs " + currentEnemy->getName());
 }
 
@@ -33,6 +37,7 @@ void CombatManager::startCombat(Player* p, Enemy* e) {
 void CombatManager::endCombat() {
     if (player) {
         player->resetDefense();
+        // Don't clear spell effects here - they should persist between combats
     }
     if (currentEnemy) {
         currentEnemy->resetDefense();
@@ -58,13 +63,7 @@ CombatResult CombatManager::processTurn(PlayerAction action) {
     currentState = COMBAT_EXECUTE_ACTIONS;
     
     // Show choices
-    String playerActionName = "";
-    switch(playerAction) {
-        case ACTION_ATTACK: playerActionName = "ATTACK"; break;
-        case ACTION_DEFEND: playerActionName = "DEFEND"; break;
-        case ACTION_USE_ITEM: playerActionName = "USE ITEM"; break;
-    }
-    
+    String playerActionName = getPlayerActionName(playerAction);
     String enemyActionName = (enemyAction == ENEMY_ATTACK) ? "ATTACK" : "DEFEND";
     
     Serial.println("CHOICES:");
@@ -108,53 +107,44 @@ CombatResult CombatManager::processTurn(PlayerAction action) {
     return getCombatResult();
 }
 
-// Execute player action using DamageCalculator
+// Execute player action with spell support
 void CombatManager::executePlayerAction() {
     if (!player || !currentEnemy) return;
     
+    // Start turn processing
+    player->startTurn();
+    
     switch(playerAction) {
-        case ACTION_ATTACK:
+        case ACTION_CAST_SPELL_1:
+        case ACTION_CAST_SPELL_2:
+        case ACTION_CAST_SPELL_3:
+        case ACTION_CAST_SPELL_4:
             {
-                int baseDamage = DamageCalculator::calculatePlayerAttackDamage(player);
-                int enemyDefense = currentEnemy->getTotalDefense();
-                int finalDamage = DamageCalculator::calculateFinalDamage(baseDamage, enemyDefense);
+                int spellSlot = playerAction - ACTION_CAST_SPELL_1;
+                Serial.print("  " + player->getName() + " casts spell from slot " + String(spellSlot + 1) + ": ");
                 
-                Serial.print("  " + player->getName() + " attacks for " + String(baseDamage) + " damage");
-                if (enemyDefense > 0) {
-                    Serial.print(" (" + String(enemyDefense) + " blocked)");
-                    Serial.print(" = " + String(finalDamage) + " final damage");
-                }
-                Serial.println();
-                
-                currentEnemy->takeDamage(baseDamage);
-                
-                if (!currentEnemy->isAlive()) {
-                    currentState = COMBAT_PLAYER_WIN;
-                    Serial.println("  " + currentEnemy->getName() + " is defeated!");
+                if (player->performCastSpell(spellSlot, currentEnemy)) {
+                    // Spell casting is handled in the spell system with proper logging
+                    if (!currentEnemy->isAlive()) {
+                        currentState = COMBAT_PLAYER_WIN;
+                        Serial.println("  " + currentEnemy->getName() + " is defeated by magic!");
+                    }
+                } else {
+                    Serial.println("Spell failed to cast!");
                 }
             }
             break;
             
         case ACTION_DEFEND:
             {
-                int defenseBonus = DamageCalculator::calculatePlayerDefenseBonus(player);
-                player->performDefend(); // This adds the defense bonus
-                Serial.println("  " + player->getName() + " defends for +" + String(defenseBonus) + " defense");
-            }
-            break;
-            
-        case ACTION_USE_ITEM:
-            {
-                int oldHP = player->getCurrentHP();
-                if (player->performUseItem()) {
-                    int healed = player->getCurrentHP() - oldHP;
-                    Serial.println("  " + player->getName() + " uses health potion! (+" + String(healed) + " HP)");
-                } else {
-                    Serial.println("  " + player->getName() + " has no items to use!");
-                }
+                int defenseBonus = player->performDefend();
+                Serial.println("  " + player->getName() + " casts a protective ward (+" + String(defenseBonus) + " magical defense)");
             }
             break;
     }
+    
+    // End turn processing
+    player->endTurn();
 }
 
 // Execute enemy action using DamageCalculator
@@ -183,6 +173,18 @@ void CombatManager::executeEnemyAction() {
         int defenseBonus = DamageCalculator::calculateEnemyDefenseBonus(currentEnemy);
         currentEnemy->performDefend(); // This adds the defense bonus
         Serial.println("  " + currentEnemy->getName() + " defends for +" + String(defenseBonus) + " defense");
+    }
+}
+
+// Helper method to get player action name for logging
+String CombatManager::getPlayerActionName(PlayerAction action) {
+    switch(action) {
+        case ACTION_CAST_SPELL_1: return "CAST SPELL 1";
+        case ACTION_CAST_SPELL_2: return "CAST SPELL 2";
+        case ACTION_CAST_SPELL_3: return "CAST SPELL 3";
+        case ACTION_CAST_SPELL_4: return "CAST SPELL 4";
+        case ACTION_DEFEND: return "DEFEND";
+        default: return "UNKNOWN";
     }
 }
 
@@ -228,7 +230,11 @@ void CombatManager::printCombatStatus() const {
     Serial.print(player->getCurrentHP());
     Serial.print("/");
     Serial.print(player->getMaxHP());
-    Serial.println(" HP");
+    Serial.print(" HP, ");
+    Serial.print(player->getCurrentMana());
+    Serial.print("/");
+    Serial.print(player->getMaxMana());
+    Serial.println(" Mana");
     
     Serial.print(currentEnemy->getName() + ": ");
     Serial.print(currentEnemy->getCurrentHP());
@@ -240,6 +246,13 @@ void CombatManager::printCombatStatus() const {
     Serial.println(turnCounter);
     Serial.print("Current Turn: ");
     Serial.println(currentState == COMBAT_CHOOSE_ACTIONS ? "Choose Actions" : "Execute Actions");
+    
+    // Show active spell effects
+    auto activeEffects = player->getActiveEffects();
+    if (!activeEffects.empty()) {
+        Serial.println("Active spell effects: " + String(activeEffects.size()));
+    }
+    
     Serial.println();
 }
 
