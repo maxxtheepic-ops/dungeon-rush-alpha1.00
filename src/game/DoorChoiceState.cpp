@@ -1,3 +1,4 @@
+// src/game/DoorChoiceState.cpp - Optimized version with partial updates
 #include "DoorChoiceState.h"
 #include "../utils/constants.h"
 
@@ -7,6 +8,7 @@ DoorChoiceState::DoorChoiceState(Display* disp, Input* inp, DungeonManager* dm) 
     maxOptions = 2;  // Only left door and right door
     screenDrawn = false;
     lastSelectedOption = -1;
+    needsFullRedraw = true;
 }
 
 void DoorChoiceState::enter() {
@@ -14,17 +16,23 @@ void DoorChoiceState::enter() {
     selectedOption = 0;
     screenDrawn = false;
     lastSelectedOption = -1;
+    needsFullRedraw = true;
     
     generateDoorChoices();
-    drawScreen();
+    drawFullScreen();
 }
 
 void DoorChoiceState::update() {
     handleInput();
     
-    // Redraw if selection changed
-    if (lastSelectedOption != selectedOption || !screenDrawn) {
-        drawScreen();
+    // Full redraw when needed
+    if (needsFullRedraw) {
+        drawFullScreen();
+        needsFullRedraw = false;
+    }
+    // Partial update when only selection changes
+    else if (lastSelectedOption != selectedOption) {
+        updateDoorSelection();
     }
 }
 
@@ -50,12 +58,29 @@ void DoorChoiceState::generateDoorChoices() {
     }
 }
 
-void DoorChoiceState::drawScreen() {
+void DoorChoiceState::drawFullScreen() {
+    Serial.println("DEBUG: DoorChoiceState::drawFullScreen() - full redraw");
     display->clear();
     
+    // Draw static elements
+    drawHeader();
+    drawDoors();
+    drawFloorProgress();
+    drawControls();
+    
+    // Draw initial cursors
+    drawDoorCursors();
+    
+    screenDrawn = true;
+    lastSelectedOption = selectedOption;
+}
+
+void DoorChoiceState::drawHeader() {
     // Header
     display->drawText("Choose Your Path", 30, 15, TFT_CYAN, 2);
-    
+}
+
+void DoorChoiceState::drawDoors() {
     // Layout: Two doors side by side (no library)
     int doorWidth = 70;
     int doorHeight = 100;
@@ -64,19 +89,108 @@ void DoorChoiceState::drawScreen() {
     int rightDoorX = (170/2) + (doorSpacing/2);
     int doorY = 60;
     
-    // Draw doors
-    drawDoor(0, leftDoorX, doorY, doorWidth, doorHeight, selectedOption == 0);
-    drawDoor(1, rightDoorX, doorY, doorWidth, doorHeight, selectedOption == 1);
+    // Store door positions for cursor drawing
+    this->leftDoorX = leftDoorX;
+    this->rightDoorX = rightDoorX;
+    this->doorY = doorY;
+    this->doorWidth = doorWidth;
+    this->doorHeight = doorHeight;
     
-    // Draw floor progress
-    drawFloorProgress();
+    // Draw doors (without selection highlighting)
+    drawDoorContent(0, leftDoorX, doorY, doorWidth, doorHeight);
+    drawDoorContent(1, rightDoorX, doorY, doorWidth, doorHeight);
+}
+
+void DoorChoiceState::drawDoorContent(int doorIndex, int x, int y, int width, int height) {
+    // Door border (always white - no selection highlighting)
+    display->drawRect(x, y, width, height, TFT_WHITE);
+    display->fillRect(x+1, y+1, width-2, height-2, TFT_BLACK);
     
-    // Controls at bottom
-    int controlY = 280;
-    display->drawText("UP/DOWN: Navigate", 10, controlY, TFT_WHITE, 1);
-    display->drawText("A: Select", 10, controlY + 12, TFT_WHITE, 1);
+    // Door label
+    String doorLabel = (doorIndex == 0) ? "LEFT" : "RIGHT";
+    display->drawText(doorLabel.c_str(), x + 10, y + 8, TFT_WHITE);
     
-    screenDrawn = true;
+    // Icon
+    String icon = (doorIndex == 0) ? leftDoorIcon : rightDoorIcon;
+    display->drawText(icon.c_str(), x + 20, y + 25, TFT_CYAN, 2);
+    
+    // Description (more space now with taller doors)
+    String desc = (doorIndex == 0) ? leftDoorDesc : rightDoorDesc;
+    
+    // Break into multiple lines
+    int startY = y + 55;
+    int lineHeight = 12;
+    int maxChars = 10; // More chars per line with wider doors
+    
+    String currentLine = "";
+    int currentY = startY;
+    
+    for (int i = 0; i < desc.length(); i++) {
+        currentLine += desc.charAt(i);
+        
+        if (currentLine.length() >= maxChars || i == desc.length() - 1) {
+            display->drawText(currentLine.c_str(), x + 2, currentY, TFT_WHITE, 1);
+            currentY += lineHeight;
+            currentLine = "";
+            
+            if (currentY > y + height - 15) break; // Don't overflow door
+        }
+    }
+}
+
+void DoorChoiceState::drawDoorCursors() {
+    // Draw cursor for selected door
+    if (selectedOption == 0) {
+        drawLeftDoorCursor();
+    } else if (selectedOption == 1) {
+        drawRightDoorCursor();
+    }
+}
+
+void DoorChoiceState::drawLeftDoorCursor() {
+    int cursorY = doorY + doorHeight + 8; // Below the door
+    int cursorX = leftDoorX + (doorWidth / 2) - 6; // Centered under door
+    display->drawText("^", cursorX, cursorY, TFT_YELLOW, 2);
+}
+
+void DoorChoiceState::drawRightDoorCursor() {
+    int cursorY = doorY + doorHeight + 8; // Below the door
+    int cursorX = rightDoorX + (doorWidth / 2) - 6; // Centered under door
+    display->drawText("^", cursorX, cursorY, TFT_YELLOW, 2);
+}
+
+void DoorChoiceState::clearLeftDoorCursor() {
+    int cursorY = doorY + doorHeight + 8;
+    int cursorX = leftDoorX + (doorWidth / 2) - 6;
+    // Clear cursor area underneath door
+    display->fillRect(cursorX, cursorY, 12, 16, TFT_BLACK);
+}
+
+void DoorChoiceState::clearRightDoorCursor() {
+    int cursorY = doorY + doorHeight + 8;
+    int cursorX = rightDoorX + (doorWidth / 2) - 6;
+    // Clear cursor area underneath door
+    display->fillRect(cursorX, cursorY, 12, 16, TFT_BLACK);
+}
+
+void DoorChoiceState::updateDoorSelection() {
+    Serial.println("DEBUG: DoorChoiceState::updateDoorSelection() - cursor update (from " + 
+                  String(lastSelectedOption) + " to " + String(selectedOption) + ")");
+    
+    // Clear old cursor
+    if (lastSelectedOption == 0) {
+        clearLeftDoorCursor();
+    } else if (lastSelectedOption == 1) {
+        clearRightDoorCursor();
+    }
+    
+    // Draw new cursor
+    if (selectedOption == 0) {
+        drawLeftDoorCursor();
+    } else if (selectedOption == 1) {
+        drawRightDoorCursor();
+    }
+    
     lastSelectedOption = selectedOption;
 }
 
@@ -128,51 +242,10 @@ void DoorChoiceState::drawProgressBar(int x, int y, int width, int height, int c
     }
 }
 
-void DoorChoiceState::drawDoor(int doorIndex, int x, int y, int width, int height, bool selected) {
-    // Door border
-    uint16_t borderColor = selected ? TFT_YELLOW : TFT_WHITE;
-    uint16_t bgColor = selected ? TFT_BLUE : TFT_BLACK;
-    
-    // Draw door frame
-    display->drawRect(x, y, width, height, borderColor);
-    display->fillRect(x+1, y+1, width-2, height-2, bgColor);
-    
-    // Door label
-    String doorLabel = (doorIndex == 0) ? "LEFT" : "RIGHT";
-    display->drawText(doorLabel.c_str(), x + 10, y + 8, TFT_WHITE);
-    
-    // Icon
-    String icon = (doorIndex == 0) ? leftDoorIcon : rightDoorIcon;
-    display->drawText(icon.c_str(), x + 20, y + 25, TFT_CYAN, 2);
-    
-    // Description (more space now with taller doors)
-    String desc = (doorIndex == 0) ? leftDoorDesc : rightDoorDesc;
-    
-    // Break into multiple lines
-    int startY = y + 55;
-    int lineHeight = 12;
-    int maxChars = 10; // More chars per line with wider doors
-    
-    String currentLine = "";
-    int currentY = startY;
-    
-    for (int i = 0; i < desc.length(); i++) {
-        currentLine += desc.charAt(i);
-        
-        if (currentLine.length() >= maxChars || i == desc.length() - 1) {
-            display->drawText(currentLine.c_str(), x + 2, currentY, TFT_WHITE, 1);
-            currentY += lineHeight;
-            currentLine = "";
-            
-            if (currentY > y + height - 15) break; // Don't overflow door
-        }
-    }
-    
-    // Selection indicator
-    if (selected) {
-        display->drawText(">", x - 8, y + height/2, TFT_YELLOW);
-        display->drawText("<", x + width + 1, y + height/2, TFT_YELLOW);
-    }
+void DoorChoiceState::drawControls() {
+    int controlY = 280;
+    display->drawText("UP/DOWN: Navigate", 10, controlY, TFT_WHITE, 1);
+    display->drawText("A: Select", 10, controlY + 12, TFT_WHITE, 1);
 }
 
 void DoorChoiceState::handleInput() {
@@ -182,6 +255,7 @@ void DoorChoiceState::handleInput() {
         if (selectedOption < 0) {
             selectedOption = maxOptions - 1;  // Wrap to right door
         }
+        Serial.println("DEBUG: DoorChoiceState - UP pressed, selectedOption: " + String(selectedOption));
     }
     
     if (input->wasPressed(Button::DOWN)) {
@@ -189,6 +263,7 @@ void DoorChoiceState::handleInput() {
         if (selectedOption >= maxOptions) {
             selectedOption = 0;  // Wrap to left door
         }
+        Serial.println("DEBUG: DoorChoiceState - DOWN pressed, selectedOption: " + String(selectedOption));
     }
     
     // Selection with A button
@@ -210,7 +285,6 @@ void DoorChoiceState::handleInput() {
                         break;
                     case ROOM_SHOP:
                         Serial.println("-> Going to Library (Shop Room converted to Library)");
-                        // CHANGED: Shop rooms now count as regular rooms that must be completed
                         requestStateChange(StateTransition::LIBRARY);
                         break;
                     case ROOM_TREASURE:
@@ -242,7 +316,6 @@ void DoorChoiceState::handleInput() {
                         break;
                     case ROOM_SHOP:
                         Serial.println("-> Going to Library (Shop Room converted to Library)");
-                        // CHANGED: Shop rooms now count as regular rooms that must be completed
                         requestStateChange(StateTransition::LIBRARY);
                         break;
                     case ROOM_TREASURE:

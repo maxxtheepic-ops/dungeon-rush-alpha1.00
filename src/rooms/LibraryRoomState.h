@@ -1,9 +1,9 @@
-// src/rooms/LibraryRoomState.h
+// src/rooms/LibraryRoomState.h - Updated header with partial update methods
 #ifndef LIBRARY_ROOM_STATE_H
 #define LIBRARY_ROOM_STATE_H
 
 #include "../game/GameState.h"
-#include <vector>  // ADD THIS LINE
+#include <vector>
 
 // Forward declarations
 class Player;
@@ -33,7 +33,7 @@ private:
     Player* player;
     Enemy* currentEnemy;
     DungeonManager* dungeonManager;
-    GameStateManager* gameStateManager;  // Reference to global systems
+    GameStateManager* gameStateManager;
     
     // Available scrolls (found in chests/boss drops)
     std::vector<Spell*> availableScrolls;
@@ -53,15 +53,40 @@ private:
     // Rest costs
     static const int REST_COST = 20;
     
-    // Drawing methods
+    // Full screen drawing methods
     void drawMainMenu();
     void drawScrollSelection();
     void drawSpellManagement();
     void drawSpellReplacement();
     void drawRestResult(bool success, String message);
-    void drawSpellDetails(Spell* spell, int x, int y);
-    void drawEquippedSpells();
-    void drawSpellSynergies();
+    void showSpellLearned(Spell* spell);
+    
+    // NEW: Partial update drawing methods for main menu
+    void drawMainMenuOptions();
+    void drawMainMenuCursor(int option);
+    void clearMainMenuCursor(int option);
+    void updateMainMenuSelection();
+    void drawEquippedSpellsFooter();
+    
+    // NEW: Partial update methods for scroll selection
+    void drawScrollOptions();
+    void drawScrollCursor(int scrollIndex);
+    void clearScrollCursor(int scrollIndex);
+    void updateScrollSelection();
+    
+    // NEW: Partial update methods for spell management
+    void drawSpellSlots();
+    void drawSpellSlotCursor(int slot);
+    void clearSpellSlotCursor(int slot);
+    void updateSpellManagementSelection();
+    void drawKnownSpellsSummary();
+    
+    // NEW: Partial update methods for spell replacement
+    void drawCurrentSpellInSlot();
+    void drawAvailableSpells();
+    void drawSpellReplacementCursor(int spellIndex);
+    void clearSpellReplacementCursor(int spellIndex);
+    void updateSpellReplacementSelection();
     
     // Input handling
     void handleMainMenuInput();
@@ -74,9 +99,8 @@ private:
     void performRest();
     void openScrolls();
     void openSpellManagement();
-    void readSelectedScroll();     // CHANGED: Renamed from learnSelectedSpell
+    void readSelectedScroll();
     void equipSpellToSlot();
-    void showSpellLearned(Spell* spell);
     void returnToMainMenu();
     void completeRoom();
     
@@ -93,7 +117,7 @@ public:
     void update() override;
     void exit() override;
     
-    // Scroll management (called by other systems) - PUBLIC
+    // Scroll management (called by other systems)
     void addAvailableScroll(Spell* spell);
     void giveScrollReward(int spellID);
     void giveBossScrollReward();
@@ -103,4 +127,4 @@ public:
     void setGameStateManager(GameStateManager* gsm) { gameStateManager = gsm; }
 };
 
-#endif // LIBRARY_ROOM_STATE_H 
+#endif // LIBRARY_ROOM_STATE_H

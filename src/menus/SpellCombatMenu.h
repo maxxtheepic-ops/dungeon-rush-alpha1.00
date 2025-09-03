@@ -1,3 +1,4 @@
+// src/menus/SpellCombatMenu.h - Updated header with partial update methods
 #ifndef SPELL_COMBAT_MENU_H
 #define SPELL_COMBAT_MENU_H
 
@@ -33,12 +34,19 @@ private:
     
     SpellDisplayInfo spellInfo[4];
     
+    // Full menu drawing methods
+    void drawFullMenu();
     void updateSpellInfo();
-    void drawMenuArea();
-    void drawSpellSlot(int slot, int x, int y, bool selected);
-    void drawDefendOption(int x, int y, bool selected);
-    void drawPlayerStatus();
     void clearMenuArea();
+    
+    // Static content drawing methods
+    void drawSpellSlots();
+    void drawSpellSlotContent(int slot, int x, int y);
+    
+    // NEW: Partial update drawing methods
+    void drawMenuCursor(int option);
+    void clearMenuCursor(int option);
+    void updateMenuSelection();
     
 public:
     SpellCombatMenu(Display* disp, Input* inp, Player* p);

@@ -1,3 +1,4 @@
+// src/combat/CombatHUD.cpp - Updated to remove unused systems
 #include "CombatHUD.h"
 #include "../utils/constants.h"
 
@@ -10,7 +11,7 @@ void CombatHUD::drawFullCombatScreen(Player* player, Enemy* enemy, int turnCount
     drawPlayerInfo(player);
     drawEnemyInfo(enemy);
     drawTurnInfo(turnCounter);
-    drawInventoryInfo(player);
+    // Removed drawInventoryInfo() - no longer needed
 }
 
 void CombatHUD::updateCombatStats(Player* player, Enemy* enemy, int turnCounter) {
@@ -19,7 +20,7 @@ void CombatHUD::updateCombatStats(Player* player, Enemy* enemy, int turnCounter)
     drawPlayerInfo(player);
     drawEnemyInfo(enemy);
     drawTurnInfo(turnCounter);
-    drawInventoryInfo(player);
+    // Removed drawInventoryInfo() - no longer needed
 }
 
 void CombatHUD::clearSpriteArea() {
@@ -43,7 +44,7 @@ void CombatHUD::drawPlayerInfo(Player* player) {
     display->drawText(hpText.c_str(), PLAYER_INFO_X, y, hpColor);
     y += LINE_HEIGHT;
     
-    // Mana (NEW for wizard)
+    // Mana (for wizard)
     String manaText = "MP: " + String(player->getCurrentMana()) + "/" + String(player->getMaxMana());
     uint16_t manaColor = (player->getCurrentMana() < player->getMaxMana() / 4) ? TFT_RED : TFT_BLUE;
     display->drawText(manaText.c_str(), PLAYER_INFO_X, y, manaColor);
@@ -109,21 +110,7 @@ void CombatHUD::drawTurnInfo(int turnCounter) {
                      PLAYER_INFO_X, 100, TFT_YELLOW);
 }
 
-void CombatHUD::drawInventoryInfo(Player* player) {
-    // Show potions in cyan
-    String potionText = "HP Potions: " + String(player->getHealthPotions());
-    uint16_t potionColor = (player->getHealthPotions() == 0) ? TFT_RED : TFT_CYAN;
-    display->drawText(potionText.c_str(), PLAYER_INFO_X, 120, potionColor);
-    
-    // Show mana potions (NEW)
-    String manaPotionText = "MP Potions: " + String(player->getManaPotions());
-    uint16_t manaPotionColor = (player->getManaPotions() == 0) ? TFT_RED : TFT_BLUE;
-    display->drawText(manaPotionText.c_str(), PLAYER_INFO_X, 135, manaPotionColor);
-    
-    // Show gold
-    display->drawText(("Gold: " + String(player->getGold())).c_str(), 
-                     PLAYER_INFO_X, 150, TFT_YELLOW);
-}
+// REMOVED: drawInventoryInfo() - no longer needed since we removed potions and gold
 
 void CombatHUD::drawVictoryScreen() {
     clearCombatArea();

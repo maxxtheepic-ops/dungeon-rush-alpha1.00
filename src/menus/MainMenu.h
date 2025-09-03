@@ -1,3 +1,4 @@
+// src/menus/MainMenu.h - Updated header with partial update methods
 #ifndef MAIN_MENU_H
 #define MAIN_MENU_H
 
@@ -15,8 +16,16 @@ private:
     int lastRenderedSelection;
     bool needsRedraw;
     
+    // Full screen drawing methods
+    void drawFullMenu();
     void drawTitle();
     void drawMenuOptions();
+    void drawInstructions();
+    
+    // NEW: Partial update drawing methods
+    void drawMenuCursor(int option);
+    void clearMenuCursor(int option);
+    void updateMenuSelection();
     
 public:
     MainMenu(Display* disp, Input* inp);

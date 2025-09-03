@@ -1,9 +1,10 @@
+// src/menus/SpellCombatMenu.cpp - Final clean version without drawPlayerStatus
 #include "SpellCombatMenu.h"
 #include "../spells/spell.h"
 #include "../entities/player.h"
 
 SpellCombatMenu::SpellCombatMenu(Display* disp, Input* inp, Player* p) 
-    : MenuBase(disp, inp, 5) {  // 4 spell slots + defend
+    : MenuBase(disp, inp, 4) {  // 4 spell slots only
     player = p;
     lastRenderedSelection = -1;
     needsRedraw = true;
@@ -12,7 +13,7 @@ SpellCombatMenu::SpellCombatMenu(Display* disp, Input* inp, Player* p)
     for (int i = 0; i < 4; i++) {
         spellInfo[i].name = "Empty";
         spellInfo[i].shortName = "----";
-        spellInfo[i].color = 0x8410;  // Gray color (TFT_GRAY equivalent)
+        spellInfo[i].color = 0x8410;  // Gray color
         spellInfo[i].available = false;
         spellInfo[i].manaCost = 0;
         spellInfo[i].power = 0;
@@ -32,12 +33,27 @@ void SpellCombatMenu::render() {
     // Update spell info in case spells changed
     updateSpellInfo();
     
-    // Only redraw if selection changed or forced redraw
-    if (selectedOption != lastRenderedSelection || needsRedraw) {
-        drawMenuArea();
-        lastRenderedSelection = selectedOption;
+    // Full redraw when needed
+    if (needsRedraw) {
+        drawFullMenu();
         needsRedraw = false;
     }
+    // Partial update when only selection changes
+    else if (selectedOption != lastRenderedSelection) {
+        updateMenuSelection();
+    }
+}
+
+void SpellCombatMenu::drawFullMenu() {
+    clearMenuArea();
+    
+    // Draw only spell slots (no player status)
+    drawSpellSlots();
+    
+    // Draw initial cursor
+    drawMenuCursor(selectedOption);
+    
+    lastRenderedSelection = selectedOption;
 }
 
 void SpellCombatMenu::updateSpellInfo() {
@@ -54,7 +70,6 @@ void SpellCombatMenu::updateSpellInfo() {
             spellInfo[i].manaCost = spell->getManaCost();
             spellInfo[i].power = spell->getBasePower();
         } else {
-            // Set struct members individually
             spellInfo[i].name = "Empty";
             spellInfo[i].shortName = "----";
             spellInfo[i].color = 0x8410;  // Gray color
@@ -70,76 +85,45 @@ void SpellCombatMenu::clearMenuArea() {
     display->fillRect(0, 200, Display::WIDTH, 120, TFT_BLACK);
 }
 
-void SpellCombatMenu::drawMenuArea() {
-    clearMenuArea();
+void SpellCombatMenu::drawSpellSlots() {
+    // Menu positioned higher up (no player status needed)
+    int menuStartY = 210;
     
-    // Draw player status first (top of menu area)
-    drawPlayerStatus();
-    
-    // Menu positioned in bottom area
-    int menuStartY = 230;
-    
-    // Layout: 2x2 grid for spells + defend button below
+    // Layout: 2x2 grid for spells
     int slotWidth = 70;
     int slotHeight = 30;
     int spacing = 10;
     
-    // Spell slots in 2x2 grid
+    // Draw spell slots (static part)
     for (int i = 0; i < 4; i++) {
         int row = i / 2;
         int col = i % 2;
         int x = 10 + (col * (slotWidth + spacing));
         int y = menuStartY + (row * (slotHeight + spacing));
         
-        drawSpellSlot(i, x, y, selectedOption == i);
-    }
-    
-    // Defend button below spells
-    int defendX = 35;
-    int defendY = menuStartY + 2 * (slotHeight + spacing);
-    drawDefendOption(defendX, defendY, selectedOption == 4);
-}
-
-void SpellCombatMenu::drawPlayerStatus() {
-    int statusY = 205;
-    
-    // HP and Mana on same line
-    display->drawText(("HP:" + String(player->getCurrentHP())).c_str(), 
-                     10, statusY, TFT_RED, 1);
-    display->drawText(("MP:" + String(player->getCurrentMana())).c_str(), 
-                     70, statusY, TFT_BLUE, 1);
-    
-    // Show recent spell synergies if any
-    auto recentCasts = player->getSpellLibrary()->getRecentCasts();
-    if (!recentCasts.empty()) {
-        display->drawText("Synergy Active", 110, statusY, TFT_PURPLE, 1);
+        drawSpellSlotContent(i, x, y);
     }
 }
 
-void SpellCombatMenu::drawSpellSlot(int slot, int x, int y, bool selected) {
+void SpellCombatMenu::drawSpellSlotContent(int slot, int x, int y) {
     SpellDisplayInfo& info = spellInfo[slot];
     
-    // Draw slot background
-    uint16_t bgColor = TFT_BLACK;
+    // Draw slot background and border (no selection highlighting)
     uint16_t borderColor = TFT_WHITE;
-    
-    if (selected) {
-        bgColor = TFT_BLUE;
-        borderColor = TFT_YELLOW;
-    } else if (!info.available && info.name != "Empty") {
+    if (!info.available && info.name != "Empty") {
         borderColor = TFT_RED; // Not enough mana
     }
     
     // Draw border and background
     display->drawRect(x, y, 70, 30, borderColor);
-    display->fillRect(x + 1, y + 1, 68, 28, bgColor);
+    display->fillRect(x + 1, y + 1, 68, 28, TFT_BLACK);
     
     // Slot number
     display->drawText(String(slot + 1).c_str(), x + 3, y + 2, TFT_YELLOW, 1);
     
     if (info.name != "Empty") {
         // Spell name (shortened)
-        uint16_t textColor = info.available ? info.color : 0x8410;  // Use gray instead of TFT_GRAY
+        uint16_t textColor = info.available ? info.color : 0x8410;
         display->drawText(info.shortName.c_str(), x + 3, y + 12, textColor, 1);
         
         // Mana cost
@@ -148,58 +132,62 @@ void SpellCombatMenu::drawSpellSlot(int slot, int x, int y, bool selected) {
         // Power indicator
         display->drawText(String(info.power).c_str(), x + 3, y + 22, TFT_YELLOW, 1);
     } else {
-        display->drawText("Empty", x + 3, y + 15, 0x8410, 1);  // Use gray instead of TFT_GRAY
+        display->drawText("Empty", x + 3, y + 15, 0x8410, 1);
     }
-    
-    // Selection indicator
-    if (selected) {
+}
+
+void SpellCombatMenu::drawMenuCursor(int option) {
+    if (option >= 0 && option < 4) {
+        // Spell slot cursor
+        int row = option / 2;
+        int col = option % 2;
+        int x = 10 + (col * (70 + 10));
+        int y = 210 + (row * (30 + 10));
+        
         display->drawText(">", x - 8, y + 12, TFT_YELLOW);
     }
 }
 
-void SpellCombatMenu::drawDefendOption(int x, int y, bool selected) {
-    uint16_t bgColor = selected ? TFT_BLUE : TFT_BLACK;
-    uint16_t borderColor = selected ? TFT_YELLOW : TFT_WHITE;
-    
-    // Draw defend option
-    display->drawRect(x, y, 100, 20, borderColor);
-    display->fillRect(x + 1, y + 1, 98, 18, bgColor);
-    
-    display->drawText("5: DEFEND", x + 5, y + 5, TFT_WHITE);
-    
-    if (selected) {
-        display->drawText(">", x - 8, y + 5, TFT_YELLOW);
+void SpellCombatMenu::clearMenuCursor(int option) {
+    if (option >= 0 && option < 4) {
+        // Clear spell slot cursor
+        int row = option / 2;
+        int col = option % 2;
+        int x = 10 + (col * (70 + 10));
+        int y = 210 + (row * (30 + 10));
+        
+        display->fillRect(x - 8, y + 12, 8, 8, TFT_BLACK);
     }
+}
+
+void SpellCombatMenu::updateMenuSelection() {
+    // Clear old cursor
+    if (lastRenderedSelection >= 0 && lastRenderedSelection < 4) {
+        clearMenuCursor(lastRenderedSelection);
+    }
+    
+    // Draw new cursor
+    drawMenuCursor(selectedOption);
+    
+    lastRenderedSelection = selectedOption;
 }
 
 MenuResult SpellCombatMenu::handleInput() {
     if (!isActive) return MenuResult::NONE;
     
-    // Handle navigation - 2x2 grid for spells + defend
+    // Handle navigation - Linear navigation through all 4 slots
     if (input->wasPressed(Button::UP)) {
-        if (selectedOption == 4) {
-            // From defend to bottom row of spells
-            selectedOption = 2;
-        } else if (selectedOption >= 2) {
-            // From bottom row to top row
-            selectedOption -= 2;
-        } else {
-            // From top row, wrap to defend
-            selectedOption = 4;
+        selectedOption--;
+        if (selectedOption < 0) {
+            selectedOption = 3; // Wrap to last slot
         }
         return MenuResult::NONE;
     }
     
     if (input->wasPressed(Button::DOWN)) {
-        if (selectedOption >= 2 && selectedOption < 4) {
-            // From bottom row to defend
-            selectedOption = 4;
-        } else if (selectedOption < 2) {
-            // From top row to bottom row
-            selectedOption += 2;
-        } else {
-            // From defend to top row
-            selectedOption = 0;
+        selectedOption++;
+        if (selectedOption >= 4) {
+            selectedOption = 0; // Wrap to first slot
         }
         return MenuResult::NONE;
     }
@@ -230,10 +218,6 @@ SpellCombatAction SpellCombatMenu::getSelectedAction() const {
 }
 
 bool SpellCombatMenu::isSelectedActionValid() const {
-    if (selectedOption == 4) {
-        return true; // Defend is always valid
-    }
-    
     // Check if spell slot is valid
     if (selectedOption < 0 || selectedOption >= 4) {
         return false;
