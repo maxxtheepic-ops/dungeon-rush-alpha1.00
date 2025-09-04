@@ -1,4 +1,4 @@
-// src/combat/CombatHUD.cpp - Updated to remove unused systems
+// src/combat/CombatHUD.cpp - Rewritten to preserve text box area
 #include "CombatHUD.h"
 #include "../utils/constants.h"
 
@@ -7,28 +7,41 @@ CombatHUD::CombatHUD(Display* disp) {
 }
 
 void CombatHUD::drawFullCombatScreen(Player* player, Enemy* enemy, int turnCounter) {
-    clearSpriteArea();
+    // Clear only the sprite and HUD area, NOT the text box area
+    clearSpriteAndHUDArea();
+    
+    // Draw combat info
     drawPlayerInfo(player);
     drawEnemyInfo(enemy);
     drawTurnInfo(turnCounter);
-    // Removed drawInventoryInfo() - no longer needed
+    
+    // Note: We don't clear the text box area (y=200-260) or spell menu area (y=260+)
 }
 
 void CombatHUD::updateCombatStats(Player* player, Enemy* enemy, int turnCounter) {
-    // Only update the stats area, not the whole screen
-    display->fillRect(0, INFO_START_Y, Display::WIDTH, 120, TFT_BLACK);
+    // Only update the HUD info area, not the whole screen
+    clearHUDInfoArea();
     drawPlayerInfo(player);
     drawEnemyInfo(enemy);
     drawTurnInfo(turnCounter);
-    // Removed drawInventoryInfo() - no longer needed
+    
+    // Note: This preserves both text box and spell menu areas
 }
 
-void CombatHUD::clearSpriteArea() {
-    display->fillRect(0, 0, Display::WIDTH, SPRITE_AREA_HEIGHT, TFT_BLACK);
+void CombatHUD::clearSpriteAndHUDArea() {
+    // Clear the top area including where floor progress text might be
+    // This needs to clear up to y=210 to remove any floor progress text from DoorChoice
+    display->fillRect(0, 0, Display::WIDTH, 210, TFT_BLACK);
+}
+
+void CombatHUD::clearHUDInfoArea() {
+    // Clear only the HUD info section, preserving sprites above and text/menu below
+    display->fillRect(0, INFO_START_Y, Display::WIDTH, 120, TFT_BLACK);
 }
 
 void CombatHUD::clearCombatArea() {
-    display->fillRect(0, 0, Display::WIDTH, 200, TFT_BLACK);  // Adjusted for spell menu
+    // Legacy method - clear everything except spell menu
+    display->fillRect(0, 0, Display::WIDTH, 260, TFT_BLACK);
 }
 
 void CombatHUD::drawPlayerInfo(Player* player) {
@@ -101,19 +114,18 @@ void CombatHUD::drawEnemyInfo(Enemy* enemy) {
         case AI_BALANCED: 
         default: aiText += "Balanced"; break;
     }
-    display->drawText(aiText.c_str(), ENEMY_INFO_X, y, TFT_GRAY);
+    display->drawText(aiText.c_str(), ENEMY_INFO_X, y, 0x8410); // Gray color for AI type
 }
 
 void CombatHUD::drawTurnInfo(int turnCounter) {
-    // Turn counter in yellow
+    // Turn counter in yellow (positioned to not overlap with other info)
     display->drawText(("Turn: " + String(turnCounter)).c_str(), 
-                     PLAYER_INFO_X, 100, TFT_YELLOW);
+                     PLAYER_INFO_X, 180, TFT_YELLOW);
 }
 
-// REMOVED: drawInventoryInfo() - no longer needed since we removed potions and gold
-
 void CombatHUD::drawVictoryScreen() {
-    clearCombatArea();
+    // Clear the combat area but preserve the text box and spell menu
+    clearSpriteAndHUDArea();
     
     // Large victory text
     display->drawText("VICTORY!", 40, 60, TFT_GREEN, 2);
@@ -127,12 +139,12 @@ void CombatHUD::drawVictoryScreen() {
     display->drawText("to continue", 35, 155, TFT_YELLOW);
     
     // Magical flourish
-    display->drawText("* Arcane power *", 15, 180, TFT_CYAN);
-    display->drawText("* grows stronger *", 10, 195, TFT_CYAN);
+    display->drawText("* Arcane power *", 15, 175, TFT_CYAN);
 }
 
 void CombatHUD::drawDefeatScreen() {
-    clearCombatArea();
+    // Clear the combat area but preserve the text box and spell menu
+    clearSpriteAndHUDArea();
     
     // Large defeat text
     display->drawText("DEFEAT!", 50, 60, TFT_RED, 2);
@@ -145,12 +157,11 @@ void CombatHUD::drawDefeatScreen() {
     display->drawText("Spells forgotten!", 20, 155, TFT_PURPLE);
     
     // Instructions
-    display->drawText("Press any button", 10, 180, TFT_CYAN);
-    display->drawText("to return to town", 10, 195, TFT_CYAN);
+    display->drawText("Press any button", 10, 175, TFT_CYAN);
 }
 
 void CombatHUD::drawNewCombatPrompt() {
-    clearCombatArea();
+    clearSpriteAndHUDArea();
     
     display->drawText("Ready your", 30, 80, TFT_WHITE, 2);
     display->drawText("Spells?", 45, 100, TFT_PURPLE, 2);

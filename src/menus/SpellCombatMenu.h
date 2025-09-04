@@ -1,4 +1,4 @@
-// src/menus/SpellCombatMenu.h - Updated header with partial update methods
+// src/menus/SpellCombatMenu.h - Updated header with text area support
 #ifndef SPELL_COMBAT_MENU_H
 #define SPELL_COMBAT_MENU_H
 
@@ -43,7 +43,7 @@ private:
     void drawSpellSlots();
     void drawSpellSlotContent(int slot, int x, int y);
     
-    // NEW: Partial update drawing methods
+    // Partial update drawing methods
     void drawMenuCursor(int option);
     void clearMenuCursor(int option);
     void updateMenuSelection();
@@ -67,6 +67,9 @@ public:
     
     // Update display when spells change
     void refreshSpellData();
+    
+    // NEW: Get the bounds of the text area (for combat text display)
+    void getTextAreaBounds(int& x, int& y, int& width, int& height);
 };
 
 #endif // SPELL_COMBAT_MENU_H

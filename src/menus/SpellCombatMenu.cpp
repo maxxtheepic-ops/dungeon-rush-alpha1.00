@@ -1,4 +1,4 @@
-// src/menus/SpellCombatMenu.cpp - Final clean version without drawPlayerStatus
+// src/menus/SpellCombatMenu.cpp - Moved spells to bottom for text box space
 #include "SpellCombatMenu.h"
 #include "../spells/spell.h"
 #include "../entities/player.h"
@@ -47,7 +47,7 @@ void SpellCombatMenu::render() {
 void SpellCombatMenu::drawFullMenu() {
     clearMenuArea();
     
-    // Draw only spell slots (no player status)
+    // Draw only spell slots at the bottom
     drawSpellSlots();
     
     // Draw initial cursor
@@ -81,17 +81,17 @@ void SpellCombatMenu::updateSpellInfo() {
 }
 
 void SpellCombatMenu::clearMenuArea() {
-    // Clear the bottom combat menu area
-    display->fillRect(0, 200, Display::WIDTH, 120, TFT_BLACK);
+    // Clear only the bottom spell menu area (reserve space above for text box)
+    display->fillRect(0, 260, Display::WIDTH, 60, TFT_BLACK);
 }
 
 void SpellCombatMenu::drawSpellSlots() {
-    // Menu positioned higher up (no player status needed)
-    int menuStartY = 210;
+    // Menu positioned at the very bottom (moved down from 210)
+    int menuStartY = 260;  // CHANGED: Moved down 50 pixels to make room for text
     
-    // Layout: 2x2 grid for spells
+    // Layout: 2x2 grid for spells (slightly smaller to fit)
     int slotWidth = 70;
-    int slotHeight = 30;
+    int slotHeight = 25;    // CHANGED: Reduced height from 30 to 25
     int spacing = 10;
     
     // Draw spell slots (static part)
@@ -114,49 +114,47 @@ void SpellCombatMenu::drawSpellSlotContent(int slot, int x, int y) {
         borderColor = TFT_RED; // Not enough mana
     }
     
-    // Draw border and background
-    display->drawRect(x, y, 70, 30, borderColor);
-    display->fillRect(x + 1, y + 1, 68, 28, TFT_BLACK);
+    // Draw border and background (smaller height)
+    display->drawRect(x, y, 70, 25, borderColor);  // CHANGED: Height from 30 to 25
+    display->fillRect(x + 1, y + 1, 68, 23, TFT_BLACK);  // CHANGED: Height from 28 to 23
     
     // Slot number
-    display->drawText(String(slot + 1).c_str(), x + 3, y + 2, TFT_YELLOW, 1);
+    display->drawText(String(slot + 1).c_str(), x + 3, y + 1, TFT_YELLOW, 1);  // CHANGED: Moved up 1 pixel
     
     if (info.name != "Empty") {
-        // Spell name (shortened)
+        // Spell name (shortened) - adjusted position
         uint16_t textColor = info.available ? info.color : 0x8410;
-        display->drawText(info.shortName.c_str(), x + 3, y + 12, textColor, 1);
+        display->drawText(info.shortName.c_str(), x + 3, y + 10, textColor, 1);  // CHANGED: Moved up 2 pixels
         
-        // Mana cost
-        display->drawText(String(info.manaCost).c_str(), x + 50, y + 22, TFT_BLUE, 1);
-        
-        // Power indicator
-        display->drawText(String(info.power).c_str(), x + 3, y + 22, TFT_YELLOW, 1);
+        // Mana cost and power on same line to save space
+        display->drawText(String(info.manaCost).c_str(), x + 50, y + 18, TFT_BLUE, 1);  // CHANGED: Moved up 4 pixels
+        display->drawText(String(info.power).c_str(), x + 3, y + 18, TFT_YELLOW, 1);   // CHANGED: Moved up 4 pixels
     } else {
-        display->drawText("Empty", x + 3, y + 15, 0x8410, 1);
+        display->drawText("Empty", x + 3, y + 12, 0x8410, 1);  // CHANGED: Moved up 3 pixels
     }
 }
 
 void SpellCombatMenu::drawMenuCursor(int option) {
     if (option >= 0 && option < 4) {
-        // Spell slot cursor
+        // Spell slot cursor (adjusted for new positions)
         int row = option / 2;
         int col = option % 2;
         int x = 10 + (col * (70 + 10));
-        int y = 210 + (row * (30 + 10));
+        int y = 260 + (row * (25 + 10));  // CHANGED: Updated y position
         
-        display->drawText(">", x - 8, y + 12, TFT_YELLOW);
+        display->drawText(">", x - 8, y + 10, TFT_YELLOW);  // CHANGED: Adjusted y offset
     }
 }
 
 void SpellCombatMenu::clearMenuCursor(int option) {
     if (option >= 0 && option < 4) {
-        // Clear spell slot cursor
+        // Clear spell slot cursor (adjusted for new positions)
         int row = option / 2;
         int col = option % 2;
         int x = 10 + (col * (70 + 10));
-        int y = 210 + (row * (30 + 10));
+        int y = 260 + (row * (25 + 10));  // CHANGED: Updated y position
         
-        display->fillRect(x - 8, y + 12, 8, 8, TFT_BLACK);
+        display->fillRect(x - 8, y + 10, 8, 8, TFT_BLACK);  // CHANGED: Adjusted y offset
     }
 }
 
@@ -238,4 +236,11 @@ int SpellCombatMenu::getSelectedSpellSlot() const {
 void SpellCombatMenu::refreshSpellData() {
     updateSpellInfo();
     needsRedraw = true;
+}
+
+void SpellCombatMenu::getTextAreaBounds(int& x, int& y, int& width, int& height) {
+    x = 10;                     // Small margin from edge
+    y = 210;                    // Positioned between HUD and spells
+    width = Display::WIDTH - 20; // Almost full width with small margins (150 pixels)
+    height = 40;                // Compact height for 3 lines
 }

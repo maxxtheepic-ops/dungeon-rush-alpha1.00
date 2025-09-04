@@ -2,20 +2,27 @@
 #define COMBAT_ROOM_STATE_H
 
 #include "RoomState.h"
-#include "../menus/SpellCombatMenu.h"  // CHANGED: Use SpellCombatMenu instead of CombatMenu
+#include "../menus/SpellCombatMenu.h"
 #include "../combat/combat_manager.h"
 #include "../combat/CombatHUD.h"
+#include "../combat/CombatTextBox.h"  // NEW: Include text box
 
 class CombatRoomState : public RoomState {
 private:
-    // Combat-specific systems - UPDATED for spell combat
-    SpellCombatMenu* spellCombatMenu;  // CHANGED: Use spell combat menu
+    // Combat-specific systems
+    SpellCombatMenu* spellCombatMenu;
     CombatManager* combatManager;
     CombatHUD* combatHUD;
+    CombatTextBox* combatTextBox;  // NEW: Add text box
     
     // Combat state
     bool combatActive;
-    bool showingResultScreen;  // New: waiting for player input on result
+    bool showingResultScreen;
+    
+    // NEW: Text box integration helpers
+    void initializeCombatText();
+    void showPlayerActionText(SpellCombatAction menuAction);
+    void showEnemyActionText();  // CHANGED: Method to show enemy actions
     
 public:
     CombatRoomState(Display* disp, Input* inp, Player* p, Enemy* e, DungeonManager* dm);
