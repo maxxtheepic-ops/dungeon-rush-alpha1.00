@@ -1,6 +1,7 @@
 #include "spell.h"
 #include "../entities/player.h"
 #include "../entities/enemy.h"
+#include "../combat/CombatTextBox.h"  // NEW: Include text box
 #include <TFT_eSPI.h>  // Add this for TFT color constants
 
 // Static member definition for Meditate
@@ -34,12 +35,12 @@ void Spell::addSecondaryEffect(SpellEffect effect, int power, int dur) {
     duration = dur;
 }
 
-bool Spell::cast(Player* caster, Enemy* target, const std::vector<Spell*>& otherSpells) {
+bool Spell::cast(Player* caster, Enemy* target, const std::vector<Spell*>& otherSpells, CombatTextBox* textBox) {
     if (!caster || !target) return false;
     
     // Check mana cost
     if (caster->getCurrentMana() < manaCost) {
-        Serial.println("Not enough mana to cast " + name + "!");
+        Serial.println("Not enough mana to cast " + getName() + "!");
         return false;
     }
     
@@ -55,11 +56,26 @@ bool Spell::cast(Player* caster, Enemy* target, const std::vector<Spell*>& other
     int synergyBonus = calculateSynergyBonus(otherSpells);
     int totalPower = basePower + synergyBonus;
     
+    // DEBUG: Add this debug output
+    Serial.println("DEBUG base Spell::cast() - spellName: " + getName());
+    Serial.println("DEBUG base Spell::cast() - synergyBonus: " + String(synergyBonus));
+    Serial.println("DEBUG base Spell::cast() - textBox pointer: " + String(textBox != nullptr ? "NOT NULL" : "NULL"));
+    
+    // Show synergy bonus in text box if present (ONLY ONCE!)
+    if (textBox && synergyBonus > 0) {
+        Serial.println("DEBUG base Spell::cast() - CALLING textBox->showSynergyBonus() ONCE");
+        textBox->showSynergyBonus(getName(), synergyBonus);
+    } else {
+        Serial.println("DEBUG base Spell::cast() - NOT calling showSynergyBonus - textBox: " + 
+                      String(textBox != nullptr ? "exists" : "null") + 
+                      ", synergyBonus: " + String(synergyBonus));
+    }
+    
     // Apply primary effect
     switch (primaryEffect) {
         case EFFECT_DAMAGE:
             target->takeDamage(totalPower);
-            Serial.println(name + " deals " + String(totalPower) + " damage!");
+            Serial.println(getName() + " deals " + String(totalPower) + " damage!");
             if (synergyBonus > 0) {
                 Serial.println("Synergy bonus: +" + String(synergyBonus) + " damage!");
             }
@@ -69,36 +85,36 @@ bool Spell::cast(Player* caster, Enemy* target, const std::vector<Spell*>& other
             if (spellID == 34) {
                 // Special handling for Meditate - it restores mana, not HP
                 caster->restoreMana(totalPower);
-                Serial.println(name + " restores " + String(totalPower) + " mana!");
+                Serial.println(getName() + " restores " + String(totalPower) + " mana!");
                 if (synergyBonus > 0) {
                     Serial.println("Deep meditation bonus: +" + String(synergyBonus) + " mana!");
                 }
             } else {
                 // Regular healing spells restore HP
                 caster->heal(totalPower);
-                Serial.println(name + " heals " + String(totalPower) + " HP!");
+                Serial.println(getName() + " heals " + String(totalPower) + " HP!");
             }
             break;
             
         case EFFECT_SHIELD:
             caster->addSpellEffect(EFFECT_SHIELD, totalPower, 3);
-            Serial.println(name + " grants " + String(totalPower) + " shield!");
+            Serial.println(getName() + " grants " + String(totalPower) + " shield!");
             break;
             
         case EFFECT_BUFF:
             caster->addSpellEffect(EFFECT_BUFF, totalPower, duration);
-            Serial.println(name + " provides a magical enhancement!");
+            Serial.println(getName() + " provides a magical enhancement!");
             break;
             
         case EFFECT_DEBUFF:
             // For now, apply debuff to enemy directly (would need enemy spell effect system)
-            Serial.println(name + " weakens the enemy!");
+            Serial.println(getName() + " weakens the enemy!");
             break;
             
         case EFFECT_DAMAGE_OVER_TIME:
             // For now, apply immediate damage (would need enemy spell effect system)
             target->takeDamage(totalPower);
-            Serial.println(name + " inflicts burning damage!");
+            Serial.println(getName() + " inflicts burning damage!");
             break;
     }
     
@@ -216,18 +232,37 @@ int Spell::calculateSynergyBonus(const std::vector<Spell*>& recentSpells) const 
 // MEDITATE SPELL IMPLEMENTATION
 //============================================================================
 
-bool Meditate::cast(Player* caster, Enemy* target, const std::vector<Spell*>& otherSpells) {
+bool Meditate::cast(Player* caster, Enemy* target, const std::vector<Spell*>& otherSpells, CombatTextBox* textBox) {
     if (!caster) return false;
     
     // No mana cost for Meditate
     
+    // DEBUG: Show current state
+    Serial.println("DEBUG Meditate::cast() - consecutiveUses BEFORE increment: " + String(consecutiveUses));
+    Serial.println("DEBUG Meditate::cast() - textBox pointer: " + String(textBox != nullptr ? "NOT NULL" : "NULL"));
+    
     // Increment consecutive uses
     consecutiveUses++;
+    Serial.println("DEBUG Meditate::cast() - consecutiveUses AFTER increment: " + String(consecutiveUses));
     
     // Calculate mana restoration with self-synergy
     int baseManaRestore = basePower; // 5 mana
     int synergyBonus = calculateSynergyBonus(otherSpells);
     int totalManaRestore = baseManaRestore + synergyBonus;
+    
+    Serial.println("DEBUG Meditate::cast() - baseManaRestore: " + String(baseManaRestore));
+    Serial.println("DEBUG Meditate::cast() - synergyBonus: " + String(synergyBonus));
+    Serial.println("DEBUG Meditate::cast() - totalManaRestore: " + String(totalManaRestore));
+    
+    // Show synergy bonus in text box if present and there is a bonus
+    if (textBox && synergyBonus > 0) {
+        Serial.println("DEBUG Meditate::cast() - CALLING textBox->showSynergyBonus()");
+        textBox->showSynergyBonus(getName(), synergyBonus);
+    } else {
+        Serial.println("DEBUG Meditate::cast() - NOT calling showSynergyBonus - textBox: " + 
+                      String(textBox != nullptr ? "exists" : "null") + 
+                      ", synergyBonus: " + String(synergyBonus));
+    }
     
     // Restore mana
     caster->restoreMana(totalManaRestore);
@@ -368,14 +403,14 @@ std::vector<Spell*> SpellLibrary::getRecentCasts() const {
     return recentCasts;
 }
 
-bool SpellLibrary::castSpell(int slot, Player* caster, Enemy* target) {
+bool SpellLibrary::castSpell(int slot, Player* caster, Enemy* target, CombatTextBox* textBox) {
     if (slot < 0 || slot >= MAX_EQUIPPED) return false;
     
     Spell* spell = equippedSpells[slot];
     if (!spell) return false;
     
-    // Cast the spell
-    if (spell->cast(caster, target, recentCasts)) {
+    // Cast the spell - Pass text box to spell casting (synergy display handled in Spell::cast())
+    if (spell->cast(caster, target, recentCasts, textBox)) {
         recordCast(spell);
         return true;
     }
@@ -492,7 +527,7 @@ Spell* SpellFactory::createSpell(int spellID) {
         case 31: return new MagicMissile();
         case 32: return new ArcaneShield();
         case 33: return new PowerSurge();
-        case 34: return new Meditate();  // NEW: Meditate spell
+        case 34: return new Meditate();  // Meditate spell
         
         // Earth spells
         case 41: return new StoneSpear();
@@ -537,7 +572,7 @@ Spell* SpellFactory::createRandomSpell(int minTier, int maxTier) {
 std::vector<Spell*> SpellFactory::createStarterSpells() {
     std::vector<Spell*> starter;
     starter.push_back(new MagicMissile()); // Reliable damage spell
-    starter.push_back(new Meditate());     // NEW: Mana restoration spell
+    starter.push_back(new Meditate());     // Mana restoration spell
     return starter;
 }
 
@@ -564,7 +599,7 @@ std::vector<Spell*> SpellFactory::createSpellsOfElement(ElementType element) {
             elementSpells.push_back(createSpell(31));
             elementSpells.push_back(createSpell(32));
             elementSpells.push_back(createSpell(33));
-            elementSpells.push_back(createSpell(34)); // NEW: Include Meditate
+            elementSpells.push_back(createSpell(34)); // Include Meditate
             break;
         case ELEMENT_EARTH:
             elementSpells.push_back(createSpell(41));

@@ -19,13 +19,13 @@ private:
     
     // Display state
     bool needsRedraw;
-    bool isVisible;  // NEW: Control visibility
+    bool isVisible;  // Control visibility
     
     // Helper methods
     void wrapText(String text, std::vector<String>& wrappedLines);
     void scrollText();
     void drawTextArea();
-    void clearTextArea();  // NEW: Method to clear the text area
+    void clearTextArea();  // Method to clear the text area
     
 public:
     CombatTextBox(Display* disp);
@@ -41,9 +41,9 @@ public:
     // Display control
     void render();
     void forceRedraw() { needsRedraw = true; }
-    void hide();      // NEW: Hide the text box
-    void show();      // NEW: Show the text box
-    bool getIsVisible() const { return isVisible; }  // NEW: Check visibility
+    void hide();      // Hide the text box
+    void show();      // Show the text box
+    bool getIsVisible() const { return isVisible; }  // Check visibility
     
     // Combat-specific convenience methods
     void showPlayerAction(String playerName, String action);
@@ -52,6 +52,9 @@ public:
     void showHealing(String target, int healing);
     void showSpellCast(String caster, String spellName);
     void showTurnResult(String result);
+    
+    // NEW: Synergy display method
+    void showSynergyBonus(String spellName, int bonus);
 };
 
 #endif

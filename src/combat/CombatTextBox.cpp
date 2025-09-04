@@ -7,7 +7,7 @@ CombatTextBox::CombatTextBox(Display* disp) {
     textWidth = 150;
     textHeight = 40;
     needsRedraw = true;
-    isVisible = true;  // NEW: Start visible
+    isVisible = true;  // Start visible
     textLines.clear();
 }
 
@@ -157,4 +157,22 @@ void CombatTextBox::showSpellCast(String caster, String spellName) {
 
 void CombatTextBox::showTurnResult(String result) {
     addText("= " + result + " =");
+}
+
+// NEW: Show synergy bonus
+void CombatTextBox::showSynergyBonus(String spellName, int bonus) {
+    Serial.println("DEBUG CombatTextBox::showSynergyBonus() CALLED!");
+    Serial.println("DEBUG - spellName: " + spellName);
+    Serial.println("DEBUG - bonus: " + String(bonus));
+    Serial.println("DEBUG - isVisible: " + String(isVisible ? "true" : "false"));
+    
+    if (bonus > 0) {
+        String synergyText = "Synergy! +" + String(bonus) + " power!";
+        Serial.println("DEBUG - Adding text: " + synergyText);
+        addText(synergyText);
+        Serial.println("DEBUG - Text added, forcing redraw");
+        forceRedraw();
+    } else {
+        Serial.println("DEBUG - No bonus to display (bonus <= 0)");
+    }
 }

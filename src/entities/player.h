@@ -10,6 +10,7 @@
 class Spell;
 class SpellLibrary;
 class Enemy;
+class CombatTextBox;  // NEW: Forward declaration for text box
 
 // Updated PlayerAction enum for spell casting
 enum PlayerAction {
@@ -54,7 +55,7 @@ private:
     // Spell system
     SpellLibrary* spellLibrary;
     
-    // NEW: Scroll inventory system
+    // Scroll inventory system
     std::vector<Spell*> scrollInventory;
     static const int MAX_SCROLLS = 20;  // Maximum scrolls player can carry
     
@@ -104,11 +105,11 @@ public:
     // Spell system
     SpellLibrary* getSpellLibrary() const;
     bool learnSpell(Spell* spell);
-    bool castSpell(int spellSlot, Enemy* target);
+    bool castSpell(int spellSlot, Enemy* target, CombatTextBox* textBox = nullptr);  // UPDATED: Now takes text box parameter
     std::vector<Spell*> getEquippedSpells() const;
     bool hasSpellEquipped() const;
     
-    // NEW: Scroll inventory management
+    // Scroll inventory management
     bool addScroll(Spell* scroll);              // Add scroll to inventory
     bool removeScroll(int scrollIndex);         // Remove scroll by index
     bool learnSpellFromScroll(int scrollIndex); // Learn spell and consume scroll
@@ -150,7 +151,7 @@ public:
     int performAttack() override;      // Magical melee attack (weak)
     int performDefend() override;      // Magical defense
     bool performUseItem();            // Use potion
-    bool performCastSpell(int slot, Enemy* target); // Cast equipped spell
+    bool performCastSpell(int slot, Enemy* target, CombatTextBox* textBox = nullptr); // UPDATED: Cast equipped spell with text box
     
     // Turn management
     void startTurn();  // Called at start of each combat turn
@@ -163,7 +164,7 @@ public:
     // Display helpers
     void displaySpellStatus() const;
     void displayActiveEffects() const;
-    void displayScrollInventory() const;  // NEW: Display scroll inventory
+    void displayScrollInventory() const;  // Display scroll inventory
     
     virtual ~Player();
 };

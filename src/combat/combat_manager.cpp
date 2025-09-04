@@ -3,6 +3,7 @@
 #include "turn_queue.h"
 #include "../utils/constants.h"
 #include "../spells/spell.h"  // Include spell.h to get SpellLibrary definition
+#include "../combat/CombatTextBox.h"  // NEW: Include text box
 
 // Constructor
 CombatManager::CombatManager() {
@@ -11,8 +12,9 @@ CombatManager::CombatManager() {
     currentState = COMBAT_CHOOSE_ACTIONS;
     turnCounter = 0;
     actionsChosen = false;
-    playerAction = ACTION_CAST_SPELL_1;  // CHANGED: Default to spell casting
+    playerAction = ACTION_CAST_SPELL_1;  // Default to spell casting
     enemyAction = ENEMY_ATTACK;
+    textBox = nullptr;  // NEW: Initialize text box reference
 }
 
 // Start combat
@@ -48,6 +50,7 @@ void CombatManager::endCombat() {
     currentState = COMBAT_CHOOSE_ACTIONS;
     turnCounter = 0;
     actionsChosen = false;
+    textBox = nullptr;  // NEW: Clear text box reference
 }
 
 // Process complete turn: choose actions + execute them
@@ -107,7 +110,7 @@ CombatResult CombatManager::processTurn(PlayerAction action) {
     return getCombatResult();
 }
 
-// Execute player action with spell support
+// Execute player action with spell support - UPDATED: Now passes text box to spell casting
 void CombatManager::executePlayerAction() {
     if (!player || !currentEnemy) return;
     
@@ -123,7 +126,11 @@ void CombatManager::executePlayerAction() {
                 int spellSlot = playerAction - ACTION_CAST_SPELL_1;
                 Serial.print("  " + player->getName() + " casts spell from slot " + String(spellSlot + 1) + ": ");
                 
-                if (player->performCastSpell(spellSlot, currentEnemy)) {
+                // DEBUG: Check textBox before passing it
+                Serial.println("DEBUG CombatManager::executePlayerAction() - textBox: " + String(textBox != nullptr ? "NOT NULL" : "NULL"));
+                
+                // FIXED: Pass text box to spell casting for synergy display
+                if (player->performCastSpell(spellSlot, currentEnemy, textBox)) {
                     // Spell casting is handled in the spell system with proper logging
                     if (!currentEnemy->isAlive()) {
                         currentState = COMBAT_PLAYER_WIN;

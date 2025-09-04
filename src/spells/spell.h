@@ -9,6 +9,7 @@
 // Forward declarations
 class Player;
 class Enemy;
+class CombatTextBox;  // NEW: Forward declaration for text box
 
 struct SpellSynergy {
     ElementType element1;
@@ -35,7 +36,7 @@ private:
     
 protected:
     String description;  // Protected so subclasses can access it
-    int basePower;      // CHANGED: Made protected so Meditate can access it
+    int basePower;      // Made protected so Meditate can access it
     
 public:
     // Constructor
@@ -57,13 +58,13 @@ public:
     int getSecondaryPower() const { return secondaryPower; }
     int getDuration() const { return duration; }
     
-    // Usage
-    virtual bool cast(Player* caster, Enemy* target, const std::vector<Spell*>& otherSpells = {});
+    // Usage - UPDATED: Now takes text box parameter for synergy display
+    virtual bool cast(Player* caster, Enemy* target, const std::vector<Spell*>& otherSpells = {}, CombatTextBox* textBox = nullptr);
     virtual String getElementName() const;
     virtual String getEffectName() const;
     virtual uint16_t getElementColor() const;
     
-    // Synergy calculation - CHANGED: Made virtual so it can be overridden
+    // Synergy calculation - Made virtual so it can be overridden
     virtual int calculateSynergyBonus(const std::vector<Spell*>& recentSpells) const;
     
     // Virtual destructor
@@ -98,8 +99,8 @@ public:
     std::vector<Spell*> getKnownSpells() const;
     std::vector<Spell*> getRecentCasts() const;
     
-    // Combat integration
-    bool castSpell(int slot, Player* caster, Enemy* target);
+    // Combat integration - UPDATED: Now takes text box parameter
+    bool castSpell(int slot, Player* caster, Enemy* target, CombatTextBox* textBox = nullptr);
     void recordCast(Spell* spell);
     void clearRecentCasts(); // Called after combat
     
@@ -131,7 +132,7 @@ public:
     }
 };
 
-// NEW: Meditate spell with self-synergy
+// Meditate spell with self-synergy
 class Meditate : public Spell {
 private:
     static int consecutiveUses; // Track consecutive uses across all instances
@@ -141,10 +142,10 @@ public:
         description = "Focus your mind to restore mana. Grows stronger with consecutive use.";
     }
     
-    // Override cast method for special self-synergy logic
-    bool cast(Player* caster, Enemy* target, const std::vector<Spell*>& otherSpells = {}) override;
+    // Override cast method for special self-synergy logic - UPDATED: Now takes text box
+    bool cast(Player* caster, Enemy* target, const std::vector<Spell*>& otherSpells = {}, CombatTextBox* textBox = nullptr) override;
     
-    // Custom synergy calculation for self-synergy - CHANGED: Now properly overrides
+    // Custom synergy calculation for self-synergy - Now properly overrides
     int calculateSynergyBonus(const std::vector<Spell*>& recentSpells) const override;
     
     // Reset consecutive uses (called when other spells are cast)

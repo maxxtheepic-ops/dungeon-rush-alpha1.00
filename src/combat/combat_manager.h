@@ -8,6 +8,7 @@
 // Forward declarations
 class DamageCalculator;
 class TurnQueue;
+class CombatTextBox;  // NEW: Forward declaration for text box
 
 enum CombatState {
     COMBAT_CHOOSE_ACTIONS,    // Both choose actions
@@ -34,8 +35,11 @@ private:
     EnemyAction enemyAction;
     bool actionsChosen;
     
+    // NEW: Text box reference for synergy display
+    CombatTextBox* textBox;
+    
     // Helper methods
-    String getPlayerActionName(PlayerAction action);  // Add this declaration
+    String getPlayerActionName(PlayerAction action);
     
 public:
     // Constructor
@@ -44,6 +48,13 @@ public:
     // Combat management
     void startCombat(Player* p, Enemy* e);
     void endCombat();
+    
+    // NEW: Set text box for synergy display
+    void setTextBox(CombatTextBox* tb) { 
+    Serial.println("DEBUG CombatManager::setTextBox() - tb: " + String(tb != nullptr ? "NOT NULL" : "NULL"));
+    textBox = tb; 
+    Serial.println("DEBUG CombatManager::setTextBox() - textBox member now: " + String(textBox != nullptr ? "NOT NULL" : "NULL"));
+}
     
     // Turn processing
     CombatResult processTurn(PlayerAction action);

@@ -324,8 +324,9 @@ bool Player::learnSpell(Spell* spell) {
     return spellLibrary->learnSpell(spell);
 }
 
-bool Player::castSpell(int spellSlot, Enemy* target) {
-    return spellLibrary->castSpell(spellSlot, this, target);
+bool Player::castSpell(int spellSlot, Enemy* target, CombatTextBox* textBox) {
+    Serial.println("DEBUG Player::castSpell() - textBox: " + String(textBox != nullptr ? "NOT NULL" : "NULL"));
+    return spellLibrary->castSpell(spellSlot, this, target, textBox);
 }
 
 std::vector<Spell*> Player::getEquippedSpells() const {
@@ -522,10 +523,10 @@ bool Player::performUseItem() {
     return false;
 }
 
-bool Player::performCastSpell(int slot, Enemy* target) {
-    return castSpell(slot, target);
+bool Player::performCastSpell(int slot, Enemy* target, CombatTextBox* textBox) {
+    Serial.println("DEBUG Player::performCastSpell() - textBox: " + String(textBox != nullptr ? "NOT NULL" : "NULL"));
+    return castSpell(slot, target, textBox);
 }
-
 // Turn management
 void Player::startTurn() {
     // Called at the start of each combat turn

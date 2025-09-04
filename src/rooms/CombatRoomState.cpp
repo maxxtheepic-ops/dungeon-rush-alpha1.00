@@ -7,7 +7,7 @@ CombatRoomState::CombatRoomState(Display* disp, Input* inp, Player* p, Enemy* e,
     spellCombatMenu = new SpellCombatMenu(display, input, p);
     combatManager = new CombatManager();
     combatHUD = new CombatHUD(display);
-    combatTextBox = new CombatTextBox(display);  // NEW: Create text box
+    combatTextBox = new CombatTextBox(display);  // Create text box
     combatActive = false;
     showingResultScreen = false;
     
@@ -18,14 +18,17 @@ CombatRoomState::CombatRoomState(Display* disp, Input* inp, Player* p, Enemy* e,
                    " w=" + String(textWidth) + " h=" + String(textHeight));
     combatTextBox->setTextArea(textX, textY, textWidth, textHeight);
     
-    Serial.println("CombatRoomState: Initialized with text box");
+    // NEW: Set text box reference in combat manager for synergy display
+    combatManager->setTextBox(combatTextBox);
+    
+    Serial.println("CombatRoomState: Initialized with text box and synergy support");
 }
 
 CombatRoomState::~CombatRoomState() {
     delete spellCombatMenu;
     delete combatManager;
     delete combatHUD;
-    delete combatTextBox;  // NEW: Clean up text box
+    delete combatTextBox;  // Clean up text box
 }
 
 void CombatRoomState::enterRoom() {
@@ -45,7 +48,7 @@ void CombatRoomState::handleRoomInteraction() {
             
             // Now process the result
             if (combatManager->getCombatResult() == RESULT_VICTORY) {
-                // Check if this was a boss room - UPDATED: Auto go to library
+                // Check if this was a boss room - Auto go to library
                 if (currentRoom && currentRoom->getType() == ROOM_BOSS) {
                     Serial.println("=== BOSS DEFEATED ===");
                     Serial.println("Boss defeated! Automatically going to library...");
@@ -76,7 +79,7 @@ void CombatRoomState::handleRoomInteraction() {
         handleCombatInput();
     }
     
-    // UPDATED: Only render text box if it's visible and not showing result screen
+    // Only render text box if it's visible and not showing result screen
     if (!showingResultScreen && combatTextBox->getIsVisible()) {
         combatTextBox->render();
     }
@@ -88,7 +91,7 @@ void CombatRoomState::exitRoom() {
     showingResultScreen = false;
     spellCombatMenu->deactivate();
     combatManager->endCombat();
-    combatTextBox->show();  // NEW: Make sure text box is visible for next combat
+    combatTextBox->show();  // Make sure text box is visible for next combat
 }
 
 void CombatRoomState::startCombat() {
@@ -103,9 +106,19 @@ void CombatRoomState::startCombat() {
     
     // Start combat systems
     combatManager->startCombat(player, currentEnemy);
+    
+    // DEBUG: Check textBox before setting
+    Serial.println("DEBUG CombatRoomState::startCombat() - combatTextBox: " + String(combatTextBox != nullptr ? "NOT NULL" : "NULL"));
+    
+    // Set text box reference in combat manager for synergy display
+    combatManager->setTextBox(combatTextBox);
+    
+    // DEBUG: Verify it was set
+    Serial.println("DEBUG CombatRoomState::startCombat() - Called setTextBox()");
+    
     combatHUD->drawFullCombatScreen(player, currentEnemy, combatManager->getTurnCounter());
     
-    // NEW: Initialize combat text (no stats)
+    // Initialize combat text (no stats)
     initializeCombatText();
     
     spellCombatMenu->activate();
@@ -119,7 +132,7 @@ void CombatRoomState::startCombat() {
 void CombatRoomState::initializeCombatText() {
     Serial.println("DEBUG: initializeCombatText() called");
     
-    combatTextBox->show();  // NEW: Make sure text box is visible
+    combatTextBox->show();  // Make sure text box is visible
     combatTextBox->clearText();
     Serial.println("DEBUG: Text cleared");
     
@@ -164,7 +177,7 @@ void CombatRoomState::handleCombatInput() {
         // Show what the player chose in text box BEFORE processing turn
         showPlayerActionText(menuAction);
         
-        // Process combat turn
+        // Process combat turn (this will now show synergy bonuses in the text box)
         CombatResult combatResult = combatManager->processTurn(playerAction);
         
         // Show what the enemy did after turn processing
@@ -175,7 +188,7 @@ void CombatRoomState::handleCombatInput() {
         
         // Check if combat is over
         if (combatResult == RESULT_VICTORY) {
-            // UPDATED: Hide text box before showing victory screen
+            // Hide text box before showing victory screen
             combatTextBox->hide();
             
             combatHUD->drawVictoryScreen();
@@ -191,7 +204,7 @@ void CombatRoomState::handleCombatInput() {
 
             // Wait for player input before processing victory
         } else if (combatResult == RESULT_DEFEAT) {
-            // UPDATED: Hide text box before showing defeat screen
+            // Hide text box before showing defeat screen
             combatTextBox->hide();
             
             combatHUD->drawDefeatScreen();
