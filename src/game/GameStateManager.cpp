@@ -224,12 +224,12 @@ void GameStateManager::showGameOverScreen() {
     display->drawText("Your magic failed", 20, 100, TFT_WHITE);
     display->drawText("in the dungeon...", 20, 115, TFT_WHITE);
     
-    display->drawText("All progress lost!", 15, 140, TFT_YELLOW);
-    display->drawText("Spells forgotten!", 20, 155, TFT_PURPLE);  // CHANGED: Spells instead of equipment
+    display->drawText("All progress lost!", 15, 140, TFT_WHITE);
+    display->drawText("Spells forgotten!", 20, 155, TFT_WHITE);  // CHANGED: Spells instead of equipment
     
     // Instructions
-    display->drawText("Press any button", 10, 180, TFT_CYAN);
-    display->drawText("to return to town", 10, 195, TFT_CYAN);
+    display->drawText("Press any button", 10, 180, TFT_WHITE);
+    display->drawText("to return to town", 10, 195, TFT_WHITE);
     
     Serial.println("DEBUG: Game over screen drawn");
     Serial.println("=== GAME OVER ===");
@@ -287,8 +287,8 @@ void GameStateManager::handlePlaceholderState(StateTransition state) {
     switch (state) {
         case StateTransition::SETTINGS:
             display->drawText("Settings", 50, 80, TFT_WHITE, 2);
-            display->drawText("Coming Soon!", 30, 120, TFT_YELLOW);
-            display->drawText("Press A to return", 10, 160, TFT_CYAN);
+            display->drawText("Coming Soon!", 30, 120, TFT_WHITE);
+            display->drawText("Press A to return", 10, 160, TFT_WHITE);
             
             if (input->wasPressed(Button::A)) {
                 currentState = mainMenuState;
@@ -298,10 +298,10 @@ void GameStateManager::handlePlaceholderState(StateTransition state) {
             
         case StateTransition::CREDITS:
             display->drawText("Credits", 50, 80, TFT_WHITE, 2);
-            display->drawText("Wizard Dungeon", 20, 120, TFT_PURPLE);  // CHANGED: Updated credits
-            display->drawText("Crawler v0.2", 30, 135, TFT_PURPLE);
+            display->drawText("Wizard Dungeon", 20, 120, TFT_WHITE);  // CHANGED: Updated credits
+            display->drawText("Crawler v0.2", 30, 135, TFT_WHITE);
             display->drawText("Made with ESP32", 20, 150, TFT_GREEN);
-            display->drawText("Press A to return", 10, 180, TFT_CYAN);
+            display->drawText("Press A to return", 10, 180, TFT_WHITE);
             
             if (input->wasPressed(Button::A)) {
                 currentState = mainMenuState;

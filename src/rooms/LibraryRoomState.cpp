@@ -203,8 +203,8 @@ void LibraryRoomState::drawMainMenu() {
     display->clear();
     
     // Title with mystical theme
-    display->drawText("ARCANE LIBRARY", 25, 15, TFT_PURPLE, 2);
-    display->drawText("\"Knowledge is power\"", 15, 35, TFT_CYAN);
+    display->drawText("ARCANE LIBRARY", 25, 15, TFT_WHITE, 2);
+    display->drawText("\"Knowledge is power\"", 15, 35, TFT_WHITE);
     display->drawText("- Ancient Wizard", 25, 50, TFT_WHITE, 1);
     
     // Player status
@@ -213,7 +213,7 @@ void LibraryRoomState::drawMainMenu() {
     display->drawText(("Mana: " + String(player->getCurrentMana()) + "/" + String(player->getMaxMana())).c_str(), 
                      10, 85, TFT_BLUE);
     display->drawText(("Gold: " + String(player->getGold())).c_str(), 
-                     10, 100, TFT_YELLOW);
+                     10, 100, TFT_WHITE);
     
     // Show scroll counts by tier
     if (hasScrolls()) {
@@ -229,7 +229,7 @@ void LibraryRoomState::drawMainMenu() {
             display->drawText(("T1: " + String(tier1Count)).c_str(), 15, 130, TFT_WHITE);
         }
         if (tier2Count > 0) {
-            display->drawText(("T2: " + String(tier2Count)).c_str(), 55, 130, TFT_YELLOW);
+            display->drawText(("T2: " + String(tier2Count)).c_str(), 55, 130, TFT_WHITE);
         }
         if (tier3Count > 0) {
             display->drawText(("T3: " + String(tier3Count)).c_str(), 95, 130, TFT_RED);
@@ -243,7 +243,7 @@ void LibraryRoomState::drawMainMenu() {
     drawEquippedSpellsFooter();
     
     // Draw controls
-    display->drawText("UP/DOWN: Navigate, A: Select", 5, 295, TFT_CYAN, 1);
+    display->drawText("UP/DOWN: Navigate, A: Select", 5, 295, TFT_WHITE, 1);
     
     // Draw initial cursor
     drawMainMenuCursor(selectedOption);
@@ -285,7 +285,7 @@ void LibraryRoomState::drawMainMenuCursor(int option) {
     int ySpacing = 25;
     int yPos = yStart + (option * ySpacing);
     
-    display->drawText(">", 15, yPos, TFT_YELLOW);
+    display->drawText(">", 15, yPos, TFT_WHITE);
 }
 
 void LibraryRoomState::clearMainMenuCursor(int option) {
@@ -310,7 +310,7 @@ void LibraryRoomState::updateMainMenuSelection() {
 }
 
 void LibraryRoomState::drawEquippedSpellsFooter() {
-    display->drawText("Equipped:", 10, 250, TFT_PURPLE);
+    display->drawText("Equipped:", 10, 250, TFT_WHITE);
     auto equippedSpells = player->getEquippedSpells();
     
     for (int i = 0; i < 4; i++) {
@@ -336,9 +336,9 @@ void LibraryRoomState::drawScrollSelection() {
     
     if (availableScrolls.empty()) {
         display->drawText("No scrolls to read", 25, 100, TFT_RED);
-        display->drawText("Find treasure chests", 20, 120, TFT_YELLOW);
-        display->drawText("or defeat bosses!", 25, 135, TFT_YELLOW);
-        display->drawText("B: Return", 50, 200, TFT_CYAN);
+        display->drawText("Find treasure chests", 20, 120, TFT_WHITE);
+        display->drawText("or defeat bosses!", 25, 135, TFT_WHITE);
+        display->drawText("B: Return", 50, 200, TFT_WHITE);
         screenDrawn = true;
         return;
     }
@@ -349,7 +349,7 @@ void LibraryRoomState::drawScrollSelection() {
     drawScrollOptions();
     
     // Draw controls
-    display->drawText("A: Read Scroll, B: Back", 20, 280, TFT_CYAN);
+    display->drawText("A: Read Scroll, B: Back", 20, 280, TFT_WHITE);
     
     // Draw initial cursor
     drawScrollCursor(selectedScrollIndex);
@@ -373,7 +373,7 @@ void LibraryRoomState::drawScrollOptions() {
             tierColor = TFT_RED;
         } else if (scroll->getBasePower() > 20) {
             tierDesc = "Tier 2 (Advanced)";
-            tierColor = TFT_YELLOW;
+            tierColor = TFT_WHITE;
         }
         
         display->drawText(scrollDesc.c_str(), 30, yPos, TFT_WHITE);
@@ -385,7 +385,7 @@ void LibraryRoomState::drawScrollOptions() {
 void LibraryRoomState::drawScrollCursor(int scrollIndex) {
     if (scrollIndex >= 0 && scrollIndex < availableScrolls.size()) {
         int yPos = 60 + (scrollIndex * 35) + 12; // Center vertically
-        display->drawText(">", 15, yPos, TFT_YELLOW);
+        display->drawText(">", 15, yPos, TFT_WHITE);
     }
 }
 
@@ -411,7 +411,7 @@ void LibraryRoomState::updateScrollSelection() {
 void LibraryRoomState::drawSpellManagement() {
     display->clear();
     
-    display->drawText("SPELL GRIMOIRE", 25, 15, TFT_PURPLE, 2);
+    display->drawText("SPELL GRIMOIRE", 25, 15, TFT_WHITE, 2);
     
     // Show equipped spells (static part)
     display->drawText("Equipped:", 10, 40, TFT_WHITE);
@@ -421,7 +421,7 @@ void LibraryRoomState::drawSpellManagement() {
     drawKnownSpellsSummary();
     
     // Draw controls
-    display->drawText("A: Manage Slot, B: Back", 10, 280, TFT_CYAN);
+    display->drawText("A: Manage Slot, B: Back", 10, 280, TFT_WHITE);
     
     // Draw initial cursor
     drawSpellSlotCursor(selectedOption);
@@ -451,7 +451,7 @@ void LibraryRoomState::drawSpellSlots() {
 
 void LibraryRoomState::drawSpellSlotCursor(int slot) {
     int yPos = 55 + (slot * 25);
-    display->drawText(">", 15, yPos, TFT_YELLOW);
+    display->drawText(">", 15, yPos, TFT_WHITE);
 }
 
 void LibraryRoomState::clearSpellSlotCursor(int slot) {
@@ -478,19 +478,19 @@ void LibraryRoomState::drawKnownSpellsSummary() {
     
     for (int i = 0; i < knownCount; i++) {
         int yPos = 185 + (i * 15);
-        display->drawText(("- " + knownSpells[i]->getName()).c_str(), 15, yPos, TFT_CYAN, 1);
+        display->drawText(("- " + knownSpells[i]->getName()).c_str(), 15, yPos, TFT_WHITE, 1);
     }
     
     if (knownSpells.size() > 3) {
         display->drawText(("... and " + String(knownSpells.size() - 3) + " more").c_str(), 
-                         15, 230, TFT_CYAN, 1);
+                         15, 230, TFT_WHITE, 1);
     }
 }
 
 void LibraryRoomState::drawSpellReplacement() {
     display->clear();
     
-    display->drawText("EQUIP SPELL", 30, 15, TFT_PURPLE, 2);
+    display->drawText("EQUIP SPELL", 30, 15, TFT_WHITE, 2);
     display->drawText(("To Slot " + String(selectedSpellSlot + 1)).c_str(), 50, 35, TFT_WHITE);
     
     // Show current spell in slot (static)
@@ -501,7 +501,7 @@ void LibraryRoomState::drawSpellReplacement() {
     drawAvailableSpells();
     
     // Draw controls
-    display->drawText("A: Equip, B: Back", 20, 280, TFT_CYAN);
+    display->drawText("A: Equip, B: Back", 20, 280, TFT_WHITE);
     
     // Draw initial cursor
     drawSpellReplacementCursor(selectedOption);
@@ -537,7 +537,7 @@ void LibraryRoomState::drawSpellReplacementCursor(int spellIndex) {
     auto knownSpells = player->getSpellLibrary()->getKnownSpells();
     if (spellIndex >= 0 && spellIndex < knownSpells.size()) {
         int yPos = 110 + (spellIndex * 20);
-        display->drawText(">", 15, yPos, TFT_YELLOW);
+        display->drawText(">", 15, yPos, TFT_WHITE);
     }
 }
 
@@ -577,7 +577,7 @@ void LibraryRoomState::readSelectedScroll() {
         display->drawText("Already Known!", 30, 100, TFT_RED, 2);
         display->drawText("You already know", 25, 130, TFT_WHITE);
         display->drawText("this spell!", 40, 145, TFT_WHITE);
-        display->drawText("Press any button", 20, 170, TFT_CYAN);
+        display->drawText("Press any button", 20, 170, TFT_WHITE);
         
         while (true) {
             input->update();
@@ -683,7 +683,7 @@ void LibraryRoomState::equipSpellToSlot() {
         display->drawText("Spell Equipped!", 25, 100, TFT_GREEN, 2);
         display->drawText(spellToEquip->getName().c_str(), 20, 130, spellToEquip->getElementColor());
         display->drawText(("to Slot " + String(selectedSpellSlot + 1)).c_str(), 35, 145, TFT_WHITE);
-        display->drawText("Press any button", 20, 170, TFT_CYAN);
+        display->drawText("Press any button", 20, 170, TFT_WHITE);
         
         while (true) {
             input->update();
@@ -708,12 +708,12 @@ void LibraryRoomState::showSpellLearned(Spell* spell) {
     display->drawText("SPELL LEARNED!", 25, 80, TFT_GREEN, 2);
     display->drawText(spell->getName().c_str(), 30, 110, spell->getElementColor());
     display->drawText(spell->getElementName().c_str(), 40, 125, TFT_WHITE);
-    display->drawText(("Power: " + String(spell->getBasePower())).c_str(), 45, 140, TFT_YELLOW);
+    display->drawText(("Power: " + String(spell->getBasePower())).c_str(), 45, 140, TFT_WHITE);
     
-    display->drawText("Added to grimoire!", 20, 165, TFT_CYAN);
-    display->drawText("Visit 'Manage Spells'", 15, 185, TFT_PURPLE);
-    display->drawText("to equip it!", 40, 200, TFT_PURPLE);
-    display->drawText("Press any button", 25, 225, TFT_CYAN);
+    display->drawText("Added to grimoire!", 20, 165, TFT_WHITE);
+    display->drawText("Visit 'Manage Spells'", 15, 185, TFT_WHITE);
+    display->drawText("to equip it!", 40, 200, TFT_WHITE);
+    display->drawText("Press any button", 25, 225, TFT_WHITE);
     
     while (true) {
         input->update();
@@ -732,14 +732,14 @@ void LibraryRoomState::drawRestResult(bool success, String message) {
         display->drawText("Rest Complete", 25, 80, TFT_GREEN, 2);
         display->drawText("Health & Mana", 25, 110, TFT_WHITE);
         display->drawText("Fully Restored!", 20, 125, TFT_WHITE);
-        display->drawText(("Gold: " + String(player->getGold())).c_str(), 40, 145, TFT_YELLOW);
+        display->drawText(("Gold: " + String(player->getGold())).c_str(), 40, 145, TFT_WHITE);
     } else {
         display->drawText("Cannot Rest", 30, 80, TFT_RED, 2);
         display->drawText(message.c_str(), 20, 110, TFT_WHITE);
     }
     
-    display->drawText("Press any button", 20, 160, TFT_CYAN);
-    display->drawText("to continue", 35, 175, TFT_CYAN);
+    display->drawText("Press any button", 20, 160, TFT_WHITE);
+    display->drawText("to continue", 35, 175, TFT_WHITE);
 }
 
 // Scroll management methods (unchanged)

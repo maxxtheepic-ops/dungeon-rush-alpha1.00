@@ -119,7 +119,7 @@ void SpellCombatMenu::drawSpellSlotContent(int slot, int x, int y) {
     display->fillRect(x + 1, y + 1, 68, 23, TFT_BLACK);  // CHANGED: Height from 28 to 23
     
     // Slot number
-    display->drawText(String(slot + 1).c_str(), x + 3, y + 1, TFT_YELLOW, 1);  // CHANGED: Moved up 1 pixel
+    display->drawText(String(slot + 1).c_str(), x + 3, y + 1, TFT_WHITE, 1);  // CHANGED: Moved up 1 pixel
     
     if (info.name != "Empty") {
         // Spell name (shortened) - adjusted position
@@ -128,7 +128,7 @@ void SpellCombatMenu::drawSpellSlotContent(int slot, int x, int y) {
         
         // Mana cost and power on same line to save space
         display->drawText(String(info.manaCost).c_str(), x + 50, y + 18, TFT_BLUE, 1);  // CHANGED: Moved up 4 pixels
-        display->drawText(String(info.power).c_str(), x + 3, y + 18, TFT_YELLOW, 1);   // CHANGED: Moved up 4 pixels
+        display->drawText(String(info.power).c_str(), x + 3, y + 18, TFT_WHITE, 1);   // CHANGED: Moved up 4 pixels
     } else {
         display->drawText("Empty", x + 3, y + 12, 0x8410, 1);  // CHANGED: Moved up 3 pixels
     }
@@ -142,7 +142,7 @@ void SpellCombatMenu::drawMenuCursor(int option) {
         int x = 10 + (col * (70 + 10));
         int y = 260 + (row * (25 + 10));  // CHANGED: Updated y position
         
-        display->drawText(">", x - 8, y + 10, TFT_YELLOW);  // CHANGED: Adjusted y offset
+        display->drawText(">", x - 8, y + 10, TFT_WHITE);  // CHANGED: Adjusted y offset
     }
 }
 

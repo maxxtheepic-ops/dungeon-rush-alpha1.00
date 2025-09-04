@@ -158,11 +158,11 @@ String Spell::getEffectName() const {
 uint16_t Spell::getElementColor() const {
     switch (element) {
         case ELEMENT_FIRE: return TFT_RED;
-        case ELEMENT_ICE: return TFT_CYAN;
-        case ELEMENT_LIGHTNING: return TFT_YELLOW;
+        case ELEMENT_ICE: return TFT_WHITE;
+        case ELEMENT_LIGHTNING: return TFT_WHITE;
         case ELEMENT_ARCANE: return TFT_MAGENTA;
         case ELEMENT_EARTH: return TFT_GREEN;
-        case ELEMENT_SHADOW: return TFT_PURPLE;
+        case ELEMENT_SHADOW: return TFT_WHITE;
         default: return TFT_WHITE;
     }
 }

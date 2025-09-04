@@ -7,6 +7,7 @@ CombatTextBox::CombatTextBox(Display* disp) {
     textWidth = 150;
     textHeight = 40;
     needsRedraw = true;
+    isVisible = true;  // NEW: Start visible
     textLines.clear();
 }
 
@@ -79,16 +80,42 @@ void CombatTextBox::clearText() {
     needsRedraw = true;
 }
 
+void CombatTextBox::hide() {
+    if (isVisible) {
+        isVisible = false;
+        clearTextArea();  // Clear the area when hiding
+    }
+}
+
+void CombatTextBox::show() {
+    if (!isVisible) {
+        isVisible = true;
+        needsRedraw = true;  // Force redraw when showing
+    }
+}
+
 void CombatTextBox::render() {
+    if (!isVisible) {
+        return;  // Don't render if hidden
+    }
+    
     if (!needsRedraw) return;
     
     drawTextArea();
     needsRedraw = false;
 }
 
+void CombatTextBox::clearTextArea() {
+    // Clear the text box area
+    display->fillRect(textX - 2, textY - 2, textWidth + 4, textHeight + 4, TFT_BLACK);
+}
+
 void CombatTextBox::drawTextArea() {
-    // AGGRESSIVE CLEAR: Clear a larger area to eliminate any persistent text
-    display->fillRect(0, 200, Display::WIDTH, 70, TFT_BLACK);  // Clear from y=200 to y=270
+    // Clear the text area first
+    clearTextArea();
+    
+    // Only draw if visible
+    if (!isVisible) return;
     
     // Draw border
     display->drawRect(textX, textY, textWidth, textHeight, TFT_WHITE);

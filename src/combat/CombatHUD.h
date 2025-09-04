@@ -1,4 +1,4 @@
-// src/combat/CombatHUD.h - Rewritten to support text box area
+// src/combat/CombatHUD.h - Updated to support clearing entire screen
 #ifndef COMBAT_HUD_H
 #define COMBAT_HUD_H
 
@@ -22,9 +22,10 @@ private:
     void drawEnemyInfo(Enemy* enemy);
     void drawTurnInfo(int turnCounter);
     
-    // NEW: Area-specific clearing methods
+    // Area-specific clearing methods
     void clearSpriteAndHUDArea();    // Clear y=0 to y=200 (preserve text box + spell menu)
     void clearHUDInfoArea();         // Clear only HUD info section for updates
+    void clearEntireScreen();        // NEW: Clear the entire screen including text box and spell menu
     
 public:
     CombatHUD(Display* disp);

@@ -47,9 +47,9 @@ void MainMenu::drawFullMenu() {
 
 void MainMenu::drawTitle() {
     // Game title - centered and large
-    display->drawText("ESP32", 50, 40, TFT_CYAN, 2);
-    display->drawText("DUNGEON", 30, 65, TFT_CYAN, 2);
-    display->drawText("CRAWLER", 25, 90, TFT_CYAN, 2);
+    display->drawText("ESP32", 50, 40, TFT_WHITE, 2);
+    display->drawText("DUNGEON", 30, 65, TFT_WHITE, 2);
+    display->drawText("CRAWLER", 25, 90, TFT_WHITE, 2);
     
     // Version or subtitle
     display->drawText("v0.1.0", 60, 120, TFT_WHITE, 1);
@@ -75,7 +75,7 @@ void MainMenu::drawMenuCursor(int option) {
     int yPos = yStart + (option * ySpacing);
     
     // Draw yellow cursor arrow
-    display->drawText(">", 30, yPos, TFT_YELLOW, 2);
+    display->drawText(">", 30, yPos, TFT_WHITE, 2);
 }
 
 void MainMenu::clearMenuCursor(int option) {
@@ -106,9 +106,9 @@ void MainMenu::updateMenuSelection() {
 void MainMenu::drawInstructions() {
     // Instructions at bottom
     int instructY = 280;
-    display->drawText("UP/DOWN: Navigate", 15, instructY, TFT_YELLOW, 1);
+    display->drawText("UP/DOWN: Navigate", 15, instructY, TFT_WHITE, 1);
     instructY += 15;
-    display->drawText("A: Select", 55, instructY, TFT_YELLOW, 1);
+    display->drawText("A: Select", 55, instructY, TFT_WHITE, 1);
 }
 
 MenuResult MainMenu::handleInput() {

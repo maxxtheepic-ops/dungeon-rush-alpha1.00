@@ -77,7 +77,7 @@ void DoorChoiceState::drawFullScreen() {
 
 void DoorChoiceState::drawHeader() {
     // Header
-    display->drawText("Choose Your Path", 30, 15, TFT_CYAN, 2);
+    display->drawText("Choose Your Path", 30, 15, TFT_WHITE, 2);
 }
 
 void DoorChoiceState::drawDoors() {
@@ -112,7 +112,7 @@ void DoorChoiceState::drawDoorContent(int doorIndex, int x, int y, int width, in
     
     // Icon
     String icon = (doorIndex == 0) ? leftDoorIcon : rightDoorIcon;
-    display->drawText(icon.c_str(), x + 20, y + 25, TFT_CYAN, 2);
+    display->drawText(icon.c_str(), x + 20, y + 25, TFT_WHITE, 2);
     
     // Description (more space now with taller doors)
     String desc = (doorIndex == 0) ? leftDoorDesc : rightDoorDesc;
@@ -150,13 +150,13 @@ void DoorChoiceState::drawDoorCursors() {
 void DoorChoiceState::drawLeftDoorCursor() {
     int cursorY = doorY + doorHeight + 8; // Below the door
     int cursorX = leftDoorX + (doorWidth / 2) - 6; // Centered under door
-    display->drawText("^", cursorX, cursorY, TFT_YELLOW, 2);
+    display->drawText("^", cursorX, cursorY, TFT_WHITE, 2);
 }
 
 void DoorChoiceState::drawRightDoorCursor() {
     int cursorY = doorY + doorHeight + 8; // Below the door
     int cursorX = rightDoorX + (doorWidth / 2) - 6; // Centered under door
-    display->drawText("^", cursorX, cursorY, TFT_YELLOW, 2);
+    display->drawText("^", cursorX, cursorY, TFT_WHITE, 2);
 }
 
 void DoorChoiceState::clearLeftDoorCursor() {
@@ -202,7 +202,7 @@ void DoorChoiceState::drawFloorProgress() {
         
         // Floor number
         String floorText = "Floor " + String(dungeonManager->getCurrentFloorNumber());
-        display->drawText(floorText.c_str(), 10, progressY, TFT_YELLOW, 1);
+        display->drawText(floorText.c_str(), 10, progressY, TFT_WHITE, 1);
         
         // Room progress - START FROM 0
         int roomsCompleted = currentFloor->getRoomsCompleted();
@@ -235,7 +235,7 @@ void DoorChoiceState::drawProgressBar(int x, int y, int width, int height, int c
         if (current >= max) {
             fillColor = TFT_RED; // Boss ready
         } else if (current >= max * 0.7) {
-            fillColor = TFT_YELLOW; // Getting close
+            fillColor = TFT_WHITE; // Getting close
         }
         
         display->fillRect(x + 1, y + 1, fillWidth - 2, height - 2, fillColor);

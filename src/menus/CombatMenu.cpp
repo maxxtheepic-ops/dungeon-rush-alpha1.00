@@ -40,7 +40,7 @@ void CombatMenu::drawMenuArea() {
         // Highlight selected option
         if (i == selectedOption) {
             // Draw selection box
-            display->fillRect(xPos - 2, yStart - 2, 44, 20, TFT_YELLOW);
+            display->fillRect(xPos - 2, yStart - 2, 44, 20, TFT_WHITE);
             display->drawText(menuOptions[i], xPos, yStart, TFT_BLACK, 1);
         } else {
             // Draw unselected option

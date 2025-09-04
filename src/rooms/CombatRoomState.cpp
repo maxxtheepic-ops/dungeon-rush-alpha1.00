@@ -75,6 +75,11 @@ void CombatRoomState::handleRoomInteraction() {
     } else if (combatActive && spellCombatMenu->getIsActive()) {
         handleCombatInput();
     }
+    
+    // UPDATED: Only render text box if it's visible and not showing result screen
+    if (!showingResultScreen && combatTextBox->getIsVisible()) {
+        combatTextBox->render();
+    }
 }
 
 void CombatRoomState::exitRoom() {
@@ -83,6 +88,7 @@ void CombatRoomState::exitRoom() {
     showingResultScreen = false;
     spellCombatMenu->deactivate();
     combatManager->endCombat();
+    combatTextBox->show();  // NEW: Make sure text box is visible for next combat
 }
 
 void CombatRoomState::startCombat() {
@@ -113,6 +119,7 @@ void CombatRoomState::startCombat() {
 void CombatRoomState::initializeCombatText() {
     Serial.println("DEBUG: initializeCombatText() called");
     
+    combatTextBox->show();  // NEW: Make sure text box is visible
     combatTextBox->clearText();
     Serial.println("DEBUG: Text cleared");
     
@@ -168,15 +175,13 @@ void CombatRoomState::handleCombatInput() {
         
         // Check if combat is over
         if (combatResult == RESULT_VICTORY) {
+            // UPDATED: Hide text box before showing victory screen
+            combatTextBox->hide();
+            
             combatHUD->drawVictoryScreen();
             combatActive = false;
             spellCombatMenu->deactivate();
             showingResultScreen = true;
-
-            // Add victory text to text box
-            combatTextBox->addText("=== VICTORY ===");
-            combatTextBox->addText("Enemy defeated!");
-            combatTextBox->render();
 
             if (currentRoom && currentRoom->getType() == ROOM_BOSS) {
                 Serial.println("Boss defeated! Will go to library after button press...");
@@ -186,15 +191,13 @@ void CombatRoomState::handleCombatInput() {
 
             // Wait for player input before processing victory
         } else if (combatResult == RESULT_DEFEAT) {
+            // UPDATED: Hide text box before showing defeat screen
+            combatTextBox->hide();
+            
             combatHUD->drawDefeatScreen();
             combatActive = false;
             spellCombatMenu->deactivate();
             showingResultScreen = true;
-
-            // Add defeat text to text box
-            combatTextBox->addText("=== DEFEAT ===");
-            combatTextBox->addText("You have fallen...");
-            combatTextBox->render();
             
             // Log what type of room we died in
             if (currentRoom) {
@@ -236,7 +239,7 @@ void CombatRoomState::showPlayerActionText(SpellCombatAction menuAction) {
     
     if (actionText != "") {
         combatTextBox->showPlayerAction(player->getName(), actionText);
-        combatTextBox->render();
+        // Don't render here - let handleRoomInteraction handle it
     }
 }
 
@@ -251,5 +254,5 @@ void CombatRoomState::showEnemyActionText() {
         combatTextBox->showEnemyAction(enemyName, "attacks");
     }
     
-    combatTextBox->render();
+    // Don't render here - let handleRoomInteraction handle it
 }

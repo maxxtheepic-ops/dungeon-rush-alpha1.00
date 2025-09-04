@@ -19,11 +19,13 @@ private:
     
     // Display state
     bool needsRedraw;
+    bool isVisible;  // NEW: Control visibility
     
     // Helper methods
     void wrapText(String text, std::vector<String>& wrappedLines);
     void scrollText();
     void drawTextArea();
+    void clearTextArea();  // NEW: Method to clear the text area
     
 public:
     CombatTextBox(Display* disp);
@@ -36,9 +38,12 @@ public:
     void addText(String text, uint16_t color);
     void clearText();
     
-    // Display
+    // Display control
     void render();
     void forceRedraw() { needsRedraw = true; }
+    void hide();      // NEW: Hide the text box
+    void show();      // NEW: Show the text box
+    bool getIsVisible() const { return isVisible; }  // NEW: Check visibility
     
     // Combat-specific convenience methods
     void showPlayerAction(String playerName, String action);

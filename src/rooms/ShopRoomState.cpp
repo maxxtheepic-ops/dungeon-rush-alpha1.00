@@ -32,20 +32,20 @@ void ShopRoomState::drawShopScreen() {
     display->clear();
     
     // Title and atmosphere
-    display->drawText("SHOP", 65, 15, TFT_YELLOW, 2);
-    display->drawText("\"Welcome, traveler!\"", 15, 40, TFT_CYAN);
+    display->drawText("SHOP", 65, 15, TFT_WHITE, 2);
+    display->drawText("\"Welcome, traveler!\"", 15, 40, TFT_WHITE);
     display->drawText("- Mysterious Merchant", 10, 55, TFT_WHITE, 1);
     
     // Player status
     display->drawText(("Gold: " + String(player->getGold())).c_str(), 
-                     10, 80, TFT_YELLOW);
+                     10, 80, TFT_WHITE);
     display->drawText(("HP: " + String(player->getCurrentHP()) + "/" + String(player->getMaxHP())).c_str(), 
                      10, 95, TFT_WHITE);
     
     // Shop items (placeholder)
     display->drawText("Available Items:", 10, 120, TFT_WHITE);
     display->drawText("- Health Potion (25g)", 15, 135, TFT_GREEN);
-    display->drawText("- Mystery Item (50g)", 15, 150, TFT_PURPLE);
+    display->drawText("- Mystery Item (50g)", 15, 150, TFT_WHITE);
     display->drawText("- Equipment Upgrade (100g)", 15, 165, TFT_BLUE);
     
     // Menu options
@@ -59,7 +59,7 @@ void ShopRoomState::drawShopScreen() {
         // Highlight selected option
         if (i == selectedOption) {
             display->fillRect(5, yPos - 3, 160, 18, TFT_BLUE);
-            display->drawText(">", 10, yPos, TFT_YELLOW);
+            display->drawText(">", 10, yPos, TFT_WHITE);
             display->drawText(options[i], 25, yPos, TFT_WHITE);
         } else {
             display->drawText(options[i], 25, yPos, TFT_WHITE);
@@ -72,8 +72,8 @@ void ShopRoomState::drawShopScreen() {
     }
     
     // Controls
-    display->drawText("UP/DOWN: Navigate", 10, 270, TFT_CYAN, 1);
-    display->drawText("A: Select, B: Leave", 10, 285, TFT_CYAN, 1);
+    display->drawText("UP/DOWN: Navigate", 10, 270, TFT_WHITE, 1);
+    display->drawText("A: Select, B: Leave", 10, 285, TFT_WHITE, 1);
     
     screenDrawn = true;
     lastSelectedOption = selectedOption;
@@ -138,16 +138,16 @@ void ShopRoomState::showPurchaseResult(bool success, String message) {
         display->drawText("Purchase Success!", 20, 100, TFT_GREEN, 2);
         display->drawText(message.c_str(), 30, 130, TFT_WHITE);
         display->drawText(("Gold: " + String(player->getGold())).c_str(), 
-                         40, 150, TFT_YELLOW);
+                         40, 150, TFT_WHITE);
         display->drawText(("Potions: " + String(player->getHealthPotions())).c_str(), 
-                         40, 165, TFT_CYAN);
+                         40, 165, TFT_WHITE);
     } else {
         display->drawText("Cannot Buy!", 35, 100, TFT_RED, 2);
         display->drawText(message.c_str(), 30, 130, TFT_WHITE);
     }
     
-    display->drawText("Press any button", 25, 190, TFT_CYAN);
-    display->drawText("to continue", 40, 205, TFT_CYAN);
+    display->drawText("Press any button", 25, 190, TFT_WHITE);
+    display->drawText("to continue", 40, 205, TFT_WHITE);
     
     // Wait for input
     while (true) {

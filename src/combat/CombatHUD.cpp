@@ -1,4 +1,4 @@
-// src/combat/CombatHUD.cpp - Rewritten to preserve text box area
+// src/combat/CombatHUD.cpp - Updated to clear all areas on victory/defeat screens
 #include "CombatHUD.h"
 #include "../utils/constants.h"
 
@@ -7,15 +7,15 @@ CombatHUD::CombatHUD(Display* disp) {
 }
 
 void CombatHUD::drawFullCombatScreen(Player* player, Enemy* enemy, int turnCounter) {
-    // Clear only the sprite and HUD area, NOT the text box area
-    clearSpriteAndHUDArea();
+    // Clear the entire screen first to remove ALL door choice remnants
+    clearEntireScreen();
     
     // Draw combat info
     drawPlayerInfo(player);
     drawEnemyInfo(enemy);
     drawTurnInfo(turnCounter);
     
-    // Note: We don't clear the text box area (y=200-260) or spell menu area (y=260+)
+    // Note: Text box and spell menu will be drawn by their respective systems
 }
 
 void CombatHUD::updateCombatStats(Player* player, Enemy* enemy, int turnCounter) {
@@ -44,11 +44,16 @@ void CombatHUD::clearCombatArea() {
     display->fillRect(0, 0, Display::WIDTH, 260, TFT_BLACK);
 }
 
+void CombatHUD::clearEntireScreen() {
+    // NEW: Clear the entire screen including text box and spell menu areas
+    display->fillRect(0, 0, Display::WIDTH, Display::HEIGHT, TFT_BLACK);
+}
+
 void CombatHUD::drawPlayerInfo(Player* player) {
     int y = INFO_START_Y;
     
     // Player name in purple (wizard theme)
-    display->drawText("WIZARD", PLAYER_INFO_X, y, TFT_PURPLE);
+    display->drawText("WIZARD", PLAYER_INFO_X, y, TFT_WHITE);
     y += LINE_HEIGHT;
     
     // Health with color coding
@@ -67,7 +72,7 @@ void CombatHUD::drawPlayerInfo(Player* player) {
     String defText = "DEF: " + String(player->getTotalDefense());
     uint16_t defColor = player->getIsDefending() ? TFT_BLUE : TFT_WHITE;
     if (player->getShieldValue() > 0) {
-        defColor = TFT_CYAN; // Show shields in cyan
+        defColor = TFT_WHITE; // Show shields in cyan
         defText += " (+" + String(player->getShieldValue()) + " shield)";
     }
     display->drawText(defText.c_str(), PLAYER_INFO_X, y, defColor);
@@ -77,7 +82,7 @@ void CombatHUD::drawPlayerInfo(Player* player) {
     auto activeEffects = player->getActiveEffects();
     if (!activeEffects.empty()) {
         display->drawText(("Effects: " + String(activeEffects.size())).c_str(), 
-                         PLAYER_INFO_X, y, TFT_PURPLE);
+                         PLAYER_INFO_X, y, TFT_WHITE);
     }
 }
 
@@ -120,31 +125,31 @@ void CombatHUD::drawEnemyInfo(Enemy* enemy) {
 void CombatHUD::drawTurnInfo(int turnCounter) {
     // Turn counter in yellow (positioned to not overlap with other info)
     display->drawText(("Turn: " + String(turnCounter)).c_str(), 
-                     PLAYER_INFO_X, 180, TFT_YELLOW);
+                     PLAYER_INFO_X, 180, TFT_WHITE);
 }
 
 void CombatHUD::drawVictoryScreen() {
-    // Clear the combat area but preserve the text box and spell menu
-    clearSpriteAndHUDArea();
+    // UPDATED: Clear the entire screen including text box and spell menu
+    clearEntireScreen();
     
     // Large victory text
     display->drawText("VICTORY!", 40, 60, TFT_GREEN, 2);
     
     // Show magical triumph
     display->drawText("Enemy vanquished", 20, 100, TFT_WHITE);
-    display->drawText("by your magic!", 25, 115, TFT_PURPLE);
+    display->drawText("by your magic!", 25, 115, TFT_WHITE);
     
     // Instructions
-    display->drawText("Press any button", 10, 140, TFT_YELLOW);
-    display->drawText("to continue", 35, 155, TFT_YELLOW);
+    display->drawText("Press any button", 10, 140, TFT_WHITE);
+    display->drawText("to continue", 35, 155, TFT_WHITE);
     
     // Magical flourish
-    display->drawText("* Arcane power *", 15, 175, TFT_CYAN);
+    display->drawText("* Arcane power *", 15, 175, TFT_WHITE);
 }
 
 void CombatHUD::drawDefeatScreen() {
-    // Clear the combat area but preserve the text box and spell menu
-    clearSpriteAndHUDArea();
+    // UPDATED: Clear the entire screen including text box and spell menu
+    clearEntireScreen();
     
     // Large defeat text
     display->drawText("DEFEAT!", 50, 60, TFT_RED, 2);
@@ -153,19 +158,19 @@ void CombatHUD::drawDefeatScreen() {
     display->drawText("Your magic failed", 20, 100, TFT_WHITE);
     display->drawText("in the dungeon...", 20, 115, TFT_WHITE);
     
-    display->drawText("All progress lost!", 15, 140, TFT_YELLOW);
-    display->drawText("Spells forgotten!", 20, 155, TFT_PURPLE);
+    display->drawText("All progress lost!", 15, 140, TFT_WHITE);
+    display->drawText("Spells forgotten!", 20, 155, TFT_WHITE);
     
     // Instructions
-    display->drawText("Press any button", 10, 175, TFT_CYAN);
+    display->drawText("Press any button", 10, 175, TFT_WHITE);
 }
 
 void CombatHUD::drawNewCombatPrompt() {
     clearSpriteAndHUDArea();
     
     display->drawText("Ready your", 30, 80, TFT_WHITE, 2);
-    display->drawText("Spells?", 45, 100, TFT_PURPLE, 2);
+    display->drawText("Spells?", 45, 100, TFT_WHITE, 2);
     
-    display->drawText("Press any button", 10, 140, TFT_YELLOW);
-    display->drawText("to start combat", 10, 155, TFT_YELLOW);
+    display->drawText("Press any button", 10, 140, TFT_WHITE);
+    display->drawText("to start combat", 10, 155, TFT_WHITE);
 }
