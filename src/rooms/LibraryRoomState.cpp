@@ -1,4 +1,4 @@
-// src/rooms/LibraryRoomState.cpp - Optimized version with partial updates
+// src/rooms/LibraryRoomState.cpp - Fixed version with better state management
 #include "LibraryRoomState.h"
 #include "../entities/player.h"
 #include "../entities/enemy.h"
@@ -39,10 +39,19 @@ void LibraryRoomState::enter() {
     selectedOption = 0;
     screenDrawn = false;
     lastSelectedOption = -1;
+    
+    // FIXED: Clear any pending state transitions immediately
+    clearTransition();
+    
     drawMainMenu();
 }
 
 void LibraryRoomState::update() {
+    // FIXED: Don't process input if we have a pending state transition
+    if (getNextState() != StateTransition::NONE) {
+        return;
+    }
+    
     switch (currentScreen) {
         case SCREEN_MAIN_MENU:
             handleMainMenuInput();
@@ -622,14 +631,17 @@ void LibraryRoomState::returnToMainMenu() {
 }
 
 void LibraryRoomState::completeRoom() {
-    if (dungeonManager) {
-        Floor* currentFloor = dungeonManager->getCurrentFloor();
-        if (currentFloor) {
-            currentFloor->incrementRoomsCompleted();
+    // FIXED: Only request state change if we don't already have one pending
+    if (getNextState() == StateTransition::NONE) {
+        if (dungeonManager) {
+            Floor* currentFloor = dungeonManager->getCurrentFloor();
+            if (currentFloor) {
+                currentFloor->incrementRoomsCompleted();
+            }
         }
+        
+        requestStateChange(StateTransition::DOOR_CHOICE);
     }
-    
-    requestStateChange(StateTransition::DOOR_CHOICE);
 }
 
 void LibraryRoomState::performRest() {

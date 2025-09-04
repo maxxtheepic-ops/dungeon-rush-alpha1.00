@@ -1,4 +1,4 @@
-// src/game/DoorChoiceState.cpp - Optimized version with partial updates
+// src/game/DoorChoiceState.cpp - Fixed version to prevent multiple redraws
 #include "DoorChoiceState.h"
 #include "../utils/constants.h"
 
@@ -20,18 +20,23 @@ void DoorChoiceState::enter() {
     
     generateDoorChoices();
     drawFullScreen();
+    
+    // FIXED: Set flags to prevent immediate redraw in update()
+    needsFullRedraw = false;
+    screenDrawn = true;
+    lastSelectedOption = selectedOption;
 }
 
 void DoorChoiceState::update() {
     handleInput();
     
-    // Full redraw when needed
+    // FIXED: Only update if selection actually changed and we're not doing a full redraw
     if (needsFullRedraw) {
         drawFullScreen();
         needsFullRedraw = false;
-    }
-    // Partial update when only selection changes
-    else if (lastSelectedOption != selectedOption) {
+        screenDrawn = true;
+        lastSelectedOption = selectedOption;
+    } else if (lastSelectedOption != selectedOption) {
         updateDoorSelection();
     }
 }
@@ -59,7 +64,6 @@ void DoorChoiceState::generateDoorChoices() {
 }
 
 void DoorChoiceState::drawFullScreen() {
-    Serial.println("DEBUG: DoorChoiceState::drawFullScreen() - full redraw");
     display->clear();
     
     // Draw static elements
@@ -70,9 +74,6 @@ void DoorChoiceState::drawFullScreen() {
     
     // Draw initial cursors
     drawDoorCursors();
-    
-    screenDrawn = true;
-    lastSelectedOption = selectedOption;
 }
 
 void DoorChoiceState::drawHeader() {
@@ -174,9 +175,6 @@ void DoorChoiceState::clearRightDoorCursor() {
 }
 
 void DoorChoiceState::updateDoorSelection() {
-    Serial.println("DEBUG: DoorChoiceState::updateDoorSelection() - cursor update (from " + 
-                  String(lastSelectedOption) + " to " + String(selectedOption) + ")");
-    
     // Clear old cursor
     if (lastSelectedOption == 0) {
         clearLeftDoorCursor();
@@ -255,7 +253,6 @@ void DoorChoiceState::handleInput() {
         if (selectedOption < 0) {
             selectedOption = maxOptions - 1;  // Wrap to right door
         }
-        Serial.println("DEBUG: DoorChoiceState - UP pressed, selectedOption: " + String(selectedOption));
     }
     
     if (input->wasPressed(Button::DOWN)) {
@@ -263,7 +260,6 @@ void DoorChoiceState::handleInput() {
         if (selectedOption >= maxOptions) {
             selectedOption = 0;  // Wrap to left door
         }
-        Serial.println("DEBUG: DoorChoiceState - DOWN pressed, selectedOption: " + String(selectedOption));
     }
     
     // Selection with A button

@@ -1,4 +1,4 @@
-// src/menus/MainMenu.cpp - Optimized version with partial updates
+// src/menus/MainMenu.cpp - Fixed version with better state management
 #include "MainMenu.h"
 
 MainMenu::MainMenu(Display* disp, Input* inp) : MenuBase(disp, inp, 3) {
@@ -23,6 +23,7 @@ void MainMenu::render() {
     if (needsRedraw) {
         drawFullMenu();
         needsRedraw = false;
+        lastRenderedSelection = selectedOption; // FIXED: Update tracking immediately
     }
     // Partial update when only selection changes
     else if (selectedOption != lastRenderedSelection) {
@@ -31,7 +32,6 @@ void MainMenu::render() {
 }
 
 void MainMenu::drawFullMenu() {
-    Serial.println("DEBUG: MainMenu::drawFullMenu() - full redraw");
     display->clear();
     
     // Draw static elements
@@ -41,8 +41,6 @@ void MainMenu::drawFullMenu() {
     
     // Draw initial cursor
     drawMenuCursor(selectedOption);
-    
-    lastRenderedSelection = selectedOption;
 }
 
 void MainMenu::drawTitle() {
@@ -88,9 +86,6 @@ void MainMenu::clearMenuCursor(int option) {
 }
 
 void MainMenu::updateMenuSelection() {
-    Serial.println("DEBUG: MainMenu::updateMenuSelection() - cursor update (from " + 
-                  String(lastRenderedSelection) + " to " + String(selectedOption) + ")");
-    
     // Clear old cursor
     if (lastRenderedSelection >= 0 && lastRenderedSelection < maxOptions) {
         clearMenuCursor(lastRenderedSelection);
@@ -116,7 +111,7 @@ MenuResult MainMenu::handleInput() {
         return MenuResult::NONE;
     }
     
-    // Check for corrupted selection state
+    // FIXED: Clear any corrupted selection state at the start
     if (selectionMade != -1) {
         Serial.println("WARNING: MainMenu starting with unexpected selectionMade: " + String(selectionMade));
         selectionMade = -1; // Clear it
@@ -137,11 +132,18 @@ MenuResult MainMenu::handleInput() {
         return MenuResult::NONE;
     }
     
-    // Handle selection
+    // Handle selection - FIXED: Add extra validation
     if (input->wasPressed(Button::A)) {
-        Serial.println("DEBUG: MainMenu - A button pressed, making selection: " + String(selectedOption));
-        selectionMade = selectedOption;
-        return MenuResult::SELECTED;
+        // FIXED: Validate selection is in valid range
+        if (selectedOption >= 0 && selectedOption < maxOptions) {
+            Serial.println("DEBUG: MainMenu - A button pressed, making selection: " + String(selectedOption));
+            selectionMade = selectedOption;
+            return MenuResult::SELECTED;
+        } else {
+            Serial.println("ERROR: Invalid selection in MainMenu: " + String(selectedOption));
+            selectedOption = 0; // Reset to safe value
+            return MenuResult::NONE;
+        }
     }
     
     // No input detected
@@ -149,6 +151,12 @@ MenuResult MainMenu::handleInput() {
 }
 
 MainMenuOption MainMenu::getSelectedOption() const {
-    Serial.println("DEBUG: MainMenu::getSelectedOption() returning: " + String(selectionMade));
-    return static_cast<MainMenuOption>(selectionMade);
+    // FIXED: Add validation
+    if (selectionMade >= 0 && selectionMade < maxOptions) {
+        Serial.println("DEBUG: MainMenu::getSelectedOption() returning: " + String(selectionMade));
+        return static_cast<MainMenuOption>(selectionMade);
+    } else {
+        Serial.println("ERROR: Invalid selectionMade in MainMenu: " + String(selectionMade));
+        return MainMenuOption::START_GAME; // Safe default
+    }
 }

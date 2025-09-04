@@ -1,3 +1,4 @@
+// src/game/MainMenuState.cpp - Fixed version to prevent multiple state changes
 #include "MainMenuState.h"
 
 MainMenuState::MainMenuState(Display* disp, Input* inp) : GameState(disp, inp) {
@@ -10,19 +11,22 @@ MainMenuState::~MainMenuState() {
 
 void MainMenuState::enter() {
     Serial.println("DEBUG: Entering Main Menu State - resetting selection");
-    Serial.println("DEBUG: Current nextState before reset: " + String((int)nextState));
-    nextState = StateTransition::NONE; // Force clear any pending transitions
+    
+    // FIXED: Clear any pending transitions immediately
+    nextState = StateTransition::NONE;
+    
     mainMenu->reset(); // Reset the menu selection to prevent auto-selection
     mainMenu->activate();
     mainMenu->render();
-    Serial.println("DEBUG: Main Menu entered - nextState is now: " + String((int)nextState));
+    
+    Serial.println("DEBUG: Main Menu entered - nextState is: " + String((int)nextState));
 }
 
 void MainMenuState::update() {
-    // Log if there's already a pending state transition (but don't block)
+    // FIXED: Don't process input if we already have a pending state transition
     if (nextState != StateTransition::NONE) {
-        Serial.println("WARNING: MainMenuState::update() called with pending nextState: " + String((int)nextState));
-        // Don't return here - let it process normally
+        Serial.println("DEBUG: MainMenuState::update() - already has pending state transition: " + String((int)nextState));
+        return; // Exit early to prevent multiple selections
     }
     
     MenuResult result = mainMenu->handleInput();
@@ -30,7 +34,8 @@ void MainMenuState::update() {
     // ALWAYS render after handling input to ensure visual updates
     mainMenu->render();
     
-    if (result == MenuResult::SELECTED) {
+    // FIXED: Only process selection if we don't already have a pending transition
+    if (result == MenuResult::SELECTED && nextState == StateTransition::NONE) {
         MainMenuOption option = mainMenu->getSelectedOption();
         
         Serial.println("DEBUG: Main menu option selected: " + String((int)option));

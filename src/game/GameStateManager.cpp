@@ -99,7 +99,7 @@ void GameStateManager::update() {
     // Update current state
     currentState->update();
     
-    // Check for state transitions
+    // FIXED: Check for state transitions with better validation
     StateTransition nextState = currentState->getNextState();
     if (nextState != StateTransition::NONE) {
         // DEBUG: Log what type of state is requesting the transition
@@ -113,8 +113,10 @@ void GameStateManager::update() {
         
         Serial.println("DEBUG: State transition requested by: " + currentStateName + " -> " + String((int)nextState));
         
-        changeState(nextState);
+        // FIXED: Clear the transition immediately to prevent multiple triggers
         currentState->clearTransition();
+        
+        changeState(nextState);
     }
 }
 
@@ -129,9 +131,16 @@ void GameStateManager::changeState(StateTransition newState) {
         return;
     }
     
+    // FIXED: Store reference to current state before changing
+    GameState* previousState = currentState;
+    
     // Exit current state
     Serial.println("DEBUG: Exiting current state");
-    currentState->exit();
+    if (previousState) {
+        previousState->exit();
+        // FIXED: Ensure transition is cleared after exit
+        previousState->clearTransition();
+    }
     
     // Change to new state
     switch (newState) {
@@ -200,9 +209,10 @@ void GameStateManager::changeState(StateTransition newState) {
             break;
     }
     
-    // Enter new state
-    Serial.println("DEBUG: About to enter new state");
+    // FIXED: Ensure new state starts clean
     if (currentState) {
+        currentState->clearTransition();
+        Serial.println("DEBUG: About to enter new state");
         currentState->enter();
         Serial.println("DEBUG: State change complete");
     } else {
