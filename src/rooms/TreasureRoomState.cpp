@@ -41,24 +41,17 @@ void TreasureRoomState::drawTreasureScreen() {
     display->clear();
     
     // Title and atmosphere
-    display->drawText("TREASURE ROOM", 25, 15, TFT_WHITE, 2);
-    display->drawText("Ancient magic fills", 20, 40, TFT_WHITE);
-    display->drawText("the air...", 45, 55, TFT_WHITE);
-    
-    // Player status
-    display->drawText(("HP: " + String(player->getCurrentHP()) + "/" + String(player->getMaxHP())).c_str(), 
-                     10, 80, TFT_WHITE);
-    display->drawText(("Mana: " + String(player->getCurrentMana()) + "/" + String(player->getMaxMana())).c_str(), 
-                     10, 95, TFT_BLUE);
-    display->drawText(("Gold: " + String(player->getGold())).c_str(), 
-                     10, 110, TFT_WHITE);
+    display->drawText("ANCIENT", 40, 15, TFT_BROWN, 2);
+    display->drawText("CHEST", 52, 30, TFT_BROWN, 2);
+    display->drawText("Mystic energy fills", 30, 70, TFT_WHITE);
+    display->drawText("the air...", 55, 85, TFT_WHITE);
     
     // Treasure description - CHANGED: Only show scroll
     if (!treasureLooted) {
         display->drawText("You see:", 10, 140, TFT_WHITE);
-        display->drawText("- Ancient scroll", 15, 155, TFT_WHITE);
+        display->drawText("  Ancient scroll", 15, 155, TFT_WHITE);
         display->drawText("  glowing with", 15, 170, TFT_WHITE);
-        display->drawText("  mystical power", 15, 185, TFT_WHITE);
+        display->drawText("  strange power", 15, 185, TFT_WHITE);
         
         // Menu options
         int yStart = 215;
@@ -70,7 +63,6 @@ void TreasureRoomState::drawTreasureScreen() {
             
             // Highlight selected option
             if (i == selectedOption) {
-                display->fillRect(5, yPos - 3, 160, 18, TFT_BLUE);
                 display->drawText(">", 10, yPos, TFT_WHITE);
                 display->drawText(options[i], 25, yPos, TFT_WHITE);
             } else {
@@ -81,14 +73,13 @@ void TreasureRoomState::drawTreasureScreen() {
         display->drawText("The room is empty now.", 15, 150, TFT_GREEN);
         display->drawText("Only dust remains...", 20, 170, TFT_GREEN);
         
-        display->drawText("Press any button", 25, 210, TFT_WHITE);
+        display->drawText("Press any button", 0, 210, TFT_WHITE);
         display->drawText("to leave", 55, 225, TFT_WHITE);
     }
     
     // Controls
     if (!treasureLooted) {
-        display->drawText("UP/DOWN: Navigate", 10, 270, TFT_WHITE, 1);
-        display->drawText("A: Select, B: Leave", 10, 285, TFT_WHITE, 1);
+        
     }
     
     screenDrawn = true;
@@ -167,25 +158,26 @@ void TreasureRoomState::takeTreasure() {
 void TreasureRoomState::showTreasureResult(Spell* foundScroll) {
     display->clear();
     
-    display->drawText("SCROLL FOUND!", 25, 60, TFT_WHITE, 2);
+    display->drawText("SCROLL FOUND!", 10, 50, TFT_WHITE, 2);
     
     if (foundScroll) {
-        display->drawText("Ancient Scroll:", 25, 90, TFT_WHITE);
-        display->drawText(foundScroll->getName().c_str(), 15, 105, foundScroll->getElementColor());
-        display->drawText(("(" + foundScroll->getElementName() + " Magic)").c_str(), 20, 120, TFT_WHITE);
-        
+
+        display->drawText((foundScroll->getElementName()).c_str(), 60, 120, TFT_WHITE);
+        display->drawText("energy emminates from the", 0, 135, TFT_WHITE);
+        display->drawText("dusty scroll.", 0, 150, TFT_WHITE); 
+
         // Show tier information
-        String tier = "Tier 1";
-        if (foundScroll->getBasePower() > 25) tier = "Tier 3";
-        else if (foundScroll->getBasePower() > 20) tier = "Tier 2";
-        display->drawText(tier.c_str(), 40, 135, TFT_WHITE);
+        String tier = "Weak";
+        if (foundScroll->getBasePower() > 25) tier = "Intense";
+        else if (foundScroll->getBasePower() > 20) tier = "Mid";
+        display->drawText(tier.c_str(), 0, 120, TFT_WHITE);
     }
     
-    display->drawText("Visit the Library", 25, 160, TFT_WHITE);
-    display->drawText("to read the scroll!", 20, 175, TFT_WHITE);
+    display->drawText("Visit the Library", 25, 200, TFT_WHITE);
+    display->drawText("to read the scroll!", 20, 215, TFT_WHITE);
     
-    display->drawText("Press any button", 25, 200, TFT_WHITE);
-    display->drawText("to continue", 40, 215, TFT_WHITE);
+    display->drawText("Press any button", 25, 240, TFT_WHITE);
+    display->drawText("to continue", 40, 255, TFT_WHITE);
     
     // Wait for input
     while (true) {

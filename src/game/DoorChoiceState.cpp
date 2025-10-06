@@ -78,7 +78,8 @@ void DoorChoiceState::drawFullScreen() {
 
 void DoorChoiceState::drawHeader() {
     // Header
-    display->drawText("Choose Your Path", 30, 15, TFT_WHITE, 2);
+    display->drawText("Choose Your", 22, 15, TFT_WHITE, 2);
+    display->drawText("Path", 60, 35, TFT_WHITE, 2);
 }
 
 void DoorChoiceState::drawDoors() {
@@ -113,7 +114,7 @@ void DoorChoiceState::drawDoorContent(int doorIndex, int x, int y, int width, in
     
     // Icon
     String icon = (doorIndex == 0) ? leftDoorIcon : rightDoorIcon;
-    display->drawText(icon.c_str(), x + 20, y + 25, TFT_WHITE, 2);
+    display->drawText(icon.c_str(), x + 10, y + 25, TFT_WHITE, 2);
     
     // Description (more space now with taller doors)
     String desc = (doorIndex == 0) ? leftDoorDesc : rightDoorDesc;
@@ -242,8 +243,7 @@ void DoorChoiceState::drawProgressBar(int x, int y, int width, int height, int c
 
 void DoorChoiceState::drawControls() {
     int controlY = 280;
-    display->drawText("UP/DOWN: Navigate", 10, controlY, TFT_WHITE, 1);
-    display->drawText("A: Select", 10, controlY + 12, TFT_WHITE, 1);
+
 }
 
 void DoorChoiceState::handleInput() {
@@ -337,8 +337,8 @@ void DoorChoiceState::handleInput() {
 
 String DoorChoiceState::getDoorIconText(DoorIcon icon) {
     switch(icon) {
-        case ICON_SWORD: return "[!]";
-        case ICON_QUESTION: return "[?]";
+        case ICON_SWORD: return "<=|-";
+        case ICON_QUESTION: return "???";
         case ICON_SKULL: return "[X]";
         default: return "[*]";
     }

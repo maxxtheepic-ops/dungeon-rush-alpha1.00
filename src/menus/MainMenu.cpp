@@ -45,12 +45,9 @@ void MainMenu::drawFullMenu() {
 
 void MainMenu::drawTitle() {
     // Game title - centered and large
-    display->drawText("ESP32", 50, 40, TFT_WHITE, 2);
-    display->drawText("DUNGEON", 30, 65, TFT_WHITE, 2);
-    display->drawText("CRAWLER", 25, 90, TFT_WHITE, 2);
+    display->drawText("ARCANE", 30, 65, TFT_SKYBLUE, 3);
+    display->drawText("DUNGEON", 20, 90, TFT_LIGHTGREY, 3);
     
-    // Version or subtitle
-    display->drawText("v0.1.0", 60, 120, TFT_WHITE, 1);
 }
 
 void MainMenu::drawMenuOptions() {
@@ -60,7 +57,7 @@ void MainMenu::drawMenuOptions() {
     
     for (int i = 0; i < maxOptions; i++) {
         int yPos = yStart + (i * ySpacing);
-        int xPos = 50; // Leave space for cursor (was 35, now 50 for cursor space)
+        int xPos = 0; // Leave space for cursor (was 35, now 50 for cursor space)
         
         // Draw menu option text (no highlighting here)
         display->drawText(menuOptions[i], xPos, yPos, TFT_WHITE, 2);
@@ -71,9 +68,8 @@ void MainMenu::drawMenuCursor(int option) {
     int yStart = 160;
     int ySpacing = 30;
     int yPos = yStart + (option * ySpacing);
-    
     // Draw yellow cursor arrow
-    display->drawText(">", 30, yPos, TFT_WHITE, 2);
+    display->drawText(">", 130, yPos, TFT_WHITE, 2);
 }
 
 void MainMenu::clearMenuCursor(int option) {
@@ -82,7 +78,7 @@ void MainMenu::clearMenuCursor(int option) {
     int yPos = yStart + (option * ySpacing);
     
     // Clear cursor area (slightly wider to ensure clean erase)
-    display->fillRect(30, yPos, 18, 16, TFT_BLACK);
+    display->fillRect(130, yPos, 18, 16, TFT_BLACK);
 }
 
 void MainMenu::updateMenuSelection() {
@@ -101,9 +97,9 @@ void MainMenu::updateMenuSelection() {
 void MainMenu::drawInstructions() {
     // Instructions at bottom
     int instructY = 280;
-    display->drawText("UP/DOWN: Navigate", 15, instructY, TFT_WHITE, 1);
+    display->drawText("UP/DOWN: Navigate", 0, instructY, TFT_WHITE, 1);
     instructY += 15;
-    display->drawText("A: Select", 55, instructY, TFT_WHITE, 1);
+    display->drawText("A: Select", 0, instructY, TFT_WHITE, 1);
 }
 
 MenuResult MainMenu::handleInput() {

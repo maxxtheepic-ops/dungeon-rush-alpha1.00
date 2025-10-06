@@ -1,4 +1,4 @@
-// src/combat/CombatHUD.h - Updated to support clearing entire screen
+// src/combat/CombatHUD.h - Updated to support victory image
 #ifndef COMBAT_HUD_H
 #define COMBAT_HUD_H
 
@@ -22,10 +22,14 @@ private:
     void drawEnemyInfo(Enemy* enemy);
     void drawTurnInfo(int turnCounter);
     
+    // NEW: Victory image drawing methods
+    void drawVictoryImage();         // Draw victory image pixel by pixel
+    void drawVictoryImageFast();     // Alternative faster method using pushImage
+    
     // Area-specific clearing methods
     void clearSpriteAndHUDArea();    // Clear y=0 to y=200 (preserve text box + spell menu)
     void clearHUDInfoArea();         // Clear only HUD info section for updates
-    void clearEntireScreen();        // NEW: Clear the entire screen including text box and spell menu
+    void clearEntireScreen();        // Clear the entire screen including text box and spell menu
     
 public:
     CombatHUD(Display* disp);
@@ -35,7 +39,7 @@ public:
     void updateCombatStats(Player* player, Enemy* enemy, int turnCounter);
     
     // Result screens
-    void drawVictoryScreen();
+    void drawVictoryScreen();        // UPDATED: Now displays image + minimal text
     void drawDefeatScreen();
     void drawNewCombatPrompt();
     

@@ -211,18 +211,16 @@ void LibraryRoomState::handleRestResultInput() {
 void LibraryRoomState::drawMainMenu() {
     display->clear();
     
-    // Title with mystical theme
-    display->drawText("ARCANE LIBRARY", 25, 15, TFT_WHITE, 2);
-    display->drawText("\"Knowledge is power\"", 15, 35, TFT_WHITE);
-    display->drawText("- Ancient Wizard", 25, 50, TFT_WHITE, 1);
+    // Title
+    display->drawText("ARCANE", 50, 15, TFT_WHITE, 2);
+    display->drawText("LIBRARY", 45, 35, TFT_WHITE, 2);
+
     
     // Player status
     display->drawText(("HP: " + String(player->getCurrentHP()) + "/" + String(player->getMaxHP())).c_str(), 
                      10, 70, TFT_WHITE);
     display->drawText(("Mana: " + String(player->getCurrentMana()) + "/" + String(player->getMaxMana())).c_str(), 
                      10, 85, TFT_BLUE);
-    display->drawText(("Gold: " + String(player->getGold())).c_str(), 
-                     10, 100, TFT_WHITE);
     
     // Show scroll counts by tier
     if (hasScrolls()) {
@@ -231,17 +229,6 @@ void LibraryRoomState::drawMainMenu() {
             if (scroll->getBasePower() <= 20) tier1Count++;
             else if (scroll->getBasePower() <= 25) tier2Count++;
             else tier3Count++;
-        }
-        
-        display->drawText("Scrolls Found:", 10, 115, TFT_GREEN);
-        if (tier1Count > 0) {
-            display->drawText(("T1: " + String(tier1Count)).c_str(), 15, 130, TFT_WHITE);
-        }
-        if (tier2Count > 0) {
-            display->drawText(("T2: " + String(tier2Count)).c_str(), 55, 130, TFT_WHITE);
-        }
-        if (tier3Count > 0) {
-            display->drawText(("T3: " + String(tier3Count)).c_str(), 95, 130, TFT_RED);
         }
     }
     
@@ -252,7 +239,6 @@ void LibraryRoomState::drawMainMenu() {
     drawEquippedSpellsFooter();
     
     // Draw controls
-    display->drawText("UP/DOWN: Navigate, A: Select", 5, 295, TFT_WHITE, 1);
     
     // Draw initial cursor
     drawMainMenuCursor(selectedOption);
@@ -341,7 +327,7 @@ void LibraryRoomState::drawEquippedSpellsFooter() {
 void LibraryRoomState::drawScrollSelection() {
     display->clear();
     
-    display->drawText("ANCIENT SCROLLS", 25, 15, TFT_GREEN, 2);
+    display->drawText("Study a scroll?", 25, 15, TFT_WHITE, 1);
     
     if (availableScrolls.empty()) {
         display->drawText("No scrolls to read", 25, 100, TFT_RED);
@@ -420,7 +406,7 @@ void LibraryRoomState::updateScrollSelection() {
 void LibraryRoomState::drawSpellManagement() {
     display->clear();
     
-    display->drawText("SPELL GRIMOIRE", 25, 15, TFT_WHITE, 2);
+    display->drawText("Grimoire", 30, 15, TFT_WHITE, 2);
     
     // Show equipped spells (static part)
     display->drawText("Equipped:", 10, 40, TFT_WHITE);
@@ -717,15 +703,16 @@ void LibraryRoomState::equipSpellToSlot() {
 void LibraryRoomState::showSpellLearned(Spell* spell) {
     display->clear();
     
-    display->drawText("SPELL LEARNED!", 25, 80, TFT_GREEN, 2);
-    display->drawText(spell->getName().c_str(), 30, 110, spell->getElementColor());
-    display->drawText(spell->getElementName().c_str(), 40, 125, TFT_WHITE);
-    display->drawText(("Power: " + String(spell->getBasePower())).c_str(), 45, 140, TFT_WHITE);
+    display->drawText("SPELL", 60, 30, TFT_WHITE, 2);
+    display->drawText("LEARNED!", 45, 45, TFT_WHITE, 2);
+    display->drawText(spell->getName().c_str(), 5, 100, spell->getElementColor(), 2);
+    display->drawText(spell->getElementName().c_str(), 10, 125, TFT_WHITE);
+    display->drawText(("Power: " + String(spell->getBasePower())).c_str(), 10, 140, TFT_WHITE);
     
-    display->drawText("Added to grimoire!", 20, 165, TFT_WHITE);
-    display->drawText("Visit 'Manage Spells'", 15, 185, TFT_WHITE);
-    display->drawText("to equip it!", 40, 200, TFT_WHITE);
-    display->drawText("Press any button", 25, 225, TFT_WHITE);
+    display->drawText("Added to grimoire!", 35, 175, TFT_WHITE);
+    display->drawText("Visit 'Manage Spells'", 30, 195, TFT_WHITE);
+    display->drawText("to equip it!", 55, 210, TFT_WHITE);
+    display->drawText("Press any button", 40, 235, TFT_WHITE);
     
     while (true) {
         input->update();

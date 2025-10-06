@@ -1,5 +1,6 @@
 // src/combat/CombatHUD.cpp - Updated to clear all areas on victory/defeat screens
 #include "CombatHUD.h"
+#include "../graphics/VictoryScreen.h"
 #include "../utils/constants.h"
 
 CombatHUD::CombatHUD(Display* disp) {
@@ -129,23 +130,17 @@ void CombatHUD::drawTurnInfo(int turnCounter) {
 }
 
 void CombatHUD::drawVictoryScreen() {
-    // UPDATED: Clear the entire screen including text box and spell menu
+    // Clear the entire screen including text box and spell menu
     clearEntireScreen();
     
-    // Large victory text
-    display->drawText("VICTORY!", 40, 60, TFT_GREEN, 2);
+    // Draw the victory image
+    drawVictoryImage();
     
-    // Show magical triumph
-    display->drawText("Enemy vanquished", 20, 100, TFT_WHITE);
-    display->drawText("by your magic!", 25, 115, TFT_WHITE);
-    
-    // Instructions
-    display->drawText("Press any button", 10, 140, TFT_WHITE);
-    display->drawText("to continue", 35, 155, TFT_WHITE);
-    
-    // Magical flourish
-    display->drawText("* Arcane power *", 15, 175, TFT_WHITE);
+    // Draw "Press any button to continue" at the bottom, below the image
+    display->drawText("Press any button", 25, 280, TFT_WHITE, 1);
+    display->drawText("to continue", 45, 295, TFT_WHITE, 1);
 }
+
 
 void CombatHUD::drawDefeatScreen() {
     // UPDATED: Clear the entire screen including text box and spell menu
@@ -163,6 +158,27 @@ void CombatHUD::drawDefeatScreen() {
     
     // Instructions
     display->drawText("Press any button", 10, 175, TFT_WHITE);
+}
+
+void CombatHUD::drawVictoryImage() {
+    // Display the victory image from victory_screen.h
+    int imageX = 0;  // Start at left edge (full width)
+    int imageY = 10; // Small margin from top
+    
+    // Method 1: Draw pixel by pixel (if you have RGB565 data)
+    for (int y = 0; y < VICTORY_IMAGE_HEIGHT && y + imageY < 260; y++) {
+        for (int x = 0; x < VICTORY_IMAGE_WIDTH && x < Display::WIDTH; x++) {
+            // Read pixel from PROGMEM 
+            uint16_t pixelColor = pgm_read_word(&victoryImageData[y * VICTORY_IMAGE_WIDTH + x]);
+            
+            // Fix blue tinting issue - check if your image data is in correct RGB565 format
+            // If the image appears blue, your data might be BGR instead of RGB
+            // You can swap the bytes here if needed:
+            // pixelColor = ((pixelColor & 0x00FF) << 8) | ((pixelColor & 0xFF00) >> 8);
+            
+            display->drawPixel(imageX + x, imageY + y, pixelColor);
+        }
+    }
 }
 
 void CombatHUD::drawNewCombatPrompt() {

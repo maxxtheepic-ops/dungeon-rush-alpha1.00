@@ -109,11 +109,11 @@ DoorIcon Room::getDoorIcon() const {
 String Room::getDescription() const {
     switch(type) {
         case ROOM_ENEMY:
-            return "Growling echoes within";
+            return "Growling  echoes    within";
         case ROOM_TREASURE:
-            return "Something glints inside";
+            return "Something glints    inside";
         case ROOM_SHOP:  // Shop is now library
-            return "Ancient knowledge awaits";  // CHANGED from "You smell incense"
+            return "Ancient   knowledge awaits";  // CHANGED from "You smell incense"
         case ROOM_BOSS:
             return "Ominous presence lurks";
         default:
